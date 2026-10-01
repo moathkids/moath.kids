@@ -1,0 +1,22 @@
+{
+ "store": {
+  "name": "معاذ كيدز",
+  "whatsapp": "972598904686",
+  "currency": "$",
+  "currency_code": "USD"
+ },
+ "products": [
+  {
+   "id": 1,
+   "name": "ترند النجمه",
+   "price": 30,
+   "image": "images/p_1790847391809_0.jpg"
+  },
+  {
+   "id": 2,
+   "name": "ترند النجمه",
+   "price": 30,
+   "image": "images/p_1790847394953_1.jpg"
+  }
+ ]
+}
