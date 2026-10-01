@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معاذ كيدز - Moath Kids</title>
+    <meta name="description" content="معاذ كيدز - ملابس أطفال ناعمة ودافئة. اطلب مباشرة عبر الواتساب. فلسطين - طولكرم - فرعون">
+    <meta name="theme-color" content="#3f5c73">
+    <link rel="icon" id="favicon" href="data:,">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome للأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- مكتبة رفع الصور التلقائية من الهاتف بدون تسمية -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '945957301459601');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=945957301459601&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+
+    <style>
+        :root {
+            --pink: #f2a3b6; --pink-soft: #fde8ee; --pink-d: #d9607f;
+            --teal: #7cc5c0; --teal-soft: #e3f4f2; --teal-d: #2f8f8a;
+            --yellow: #f6c453; --yellow-soft: #fff3cf;
+            --navy: #3f5c73; --ink: #2d3f4e; --muted: #6f8190;
+            --bg: #fffaf6; --line: #f1e6df; --wa: #1faa59;
+            --display: 'Baloo Bhaijaan 2', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg); color: var(--ink); margin: 0; line-height: 1.6;
+        }
+        a { color: inherit; }
+        .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+        :focus-visible { outline: 3px solid var(--pink-d); outline-offset: 2px; }
+
+        .announce { background: var(--navy); color: #fff; text-align: center; padding: 8px 14px; font-size: 14px; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; padding-bottom: 12px; }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .brand span { font-family: var(--display); font-weight: 800; font-size: 20px; color: var(--navy); }
+        .pill-wa {
+            display: inline-flex; align-items: center; gap: 8px; background: var(--wa); color: #fff;
+            text-decoration: none; padding: 9px 18px; border-radius: 24px; font-weight: 700; font-size: 15px;
+        }
+        .pill-wa svg { width: 20px; height: 20px; fill: #fff; }
+
+        .hero-bg {
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 96% 4%, var(--pink-soft) 0, transparent 40%),
+                radial-gradient(circle at 4% 96%, var(--yellow-soft) 0, transparent 38%),
+                var(--bg);
+        }
+        .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; padding-top: 20px; padding-bottom: 66px; }
+        .hero h1 {
+            font-family: var(--display); font-weight: 800; color: var(--navy);
+            font-size: clamp(34px, 5.2vw, 56px); line-height: 1.2; margin: 0 0 14px;
+        }
+        .hero p { font-size: 18px; color: var(--muted); margin: 0 0 26px; max-width: 460px; }
+        .cta-main {
+            display: inline-block; text-decoration: none; padding: 13px 28px; border-radius: 28px;
+            font-weight: 700; font-size: 16px; border: 2px solid var(--navy); background: var(--navy); color: #fff;
+        }
+        .cta-main:hover { background: #324a5d; }
+
+        /* زر إضافة منتج سري للتاجر */
+        .admin-upload-btn {
+            background: var(--pink-d); color: #fff; border: none; padding: 10px 20px;
+            border-radius: 20px; font-weight: 700; cursor: pointer; margin-bottom: 20px; display: inline-block;
+        }
+
+        .shop { padding-top: 46px; }
+        .sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+        .sec-head h2 { font-family: var(--display); font-weight: 800; font-size: 30px; color: var(--navy); margin: 0; line-height: 1.2; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 290px)); justify-content: center; gap: 20px; }
+        .card {
+            background: #fff; border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
+            display: flex; flex-direction: column; position: relative;
+        }
+        .card .ph-wrap { aspect-ratio: 4 / 5; background: var(--pink-soft); overflow: hidden; }
+        .card img.product-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-body { padding: 14px 14px 6px; flex: 1; }
+        .card-title { font-size: 17px; font-weight: 700; line-height: 1.4; margin: 0 0 4px; }
+        .price { font-family: var(--display); font-weight: 800; font-size: 22px; color: var(--navy); margin-top: 8px; }
+
+        .order-btn {
+            background: var(--wa); color: #fff; text-decoration: none; text-align: center; font-weight: 700;
+            padding: 11px; border-radius: 12px; margin: 10px 14px 14px; display: block; border: none; font-size: 16px; cursor: pointer;
+        }
+        .order-btn:hover { background: #17934b; }
+
+        footer { margin-top: 48px; border-top: 1px solid var(--line); background: #fff; padding: 28px 0 22px; }
+        .foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .socials { display: flex; gap: 10px; flex-wrap: wrap; }
+        .socials a {
+            text-decoration: none; background: var(--teal-soft); color: var(--navy); font-weight: 700;
+            padding: 8px 14px; border-radius: 50%; font-size: 18px; display: inline-flex;
+            align-items: center; justify-content: center; width: 40px; height: 40px; transition: 0.3s;
+        }
+        .socials a:hover { background: var(--navy); color: #fff; }
+
+        .float-wa {
+            position: fixed; bottom: 18px; inset-inline-start: 18px; width: 56px; height: 56px; border-radius: 50%;
+            background: var(--wa); display: grid; place-items: center; z-index: 40;
+            box-shadow: 0 8px 20px rgba(0,0,0,.25);
+        }
+        .float-wa svg { width: 30px; height: 30px; fill: #fff; }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="wa-icon" viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.22-8.22 8.22zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.29z"/></symbol>
+    </svg>
+
+    <div class="wrap topbar">
+        <a class="brand" href="#"><span>معاذ كيدز</span></a>
+        <a class="pill-wa" href="https://wa.me/972598904686" target="_blank" rel="noopener">
+            <svg><use href="#wa-icon"/></svg><span>تواصل معنا</span>
+        </a>
+    </div>
+
+    <section class="wrap hero">
+        <div>
+            <h1>معاذ كيدز - Moath Kids</h1>
+            <p>ملابس أطفال ناعمة ودافئة بأعلى جودة. اطلب مباشرة عبر الواتساب.</p>
+            <a class="cta-main" href="#shop">تسوق الآن</a>
+        </div>
+    </section>
+
+    <main class="wrap shop" id="shop">
+        <div class="sec-head">
+            <h2>منتجاتنا</h2>
+            <!-- زر رفـع الصور المباشر من الهاتف -->
+            <button id="upload_widget" class="admin-upload-btn"><i class="fa-solid fa-plus"></i> إضافة صورة منتج من الهاتف</button>
+        </div>
+
+        <div class="grid" id="productContainer">
+            <!-- المنتجات ستظهر هنا تلقائياً -->
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap foot">
+            <div>© معاذ كيدز - جميع الحقوق محفوظة</div>
+            <div class="socials">
+                <a href="https://facebook.com" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="https://instagram.com" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://tiktok.com" target="_blank" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <a class="float-wa" href="https://wa.me/972598904686" target="_blank" rel="noopener" aria-label="واتساب">
+        <svg><use href="#wa-icon"/></svg>
+    </a>
+
+    <script>
+        // إعداد أداة رفع الصور من الهاتف مباشرة
+        var myWidget = cloudinary.createUploadWidget({
+            cloudName: 'demo', 
+            uploadPreset: 'unsigned_default'
+        }, (error, result) => { 
+            if (!error && result && result.event === "success") { 
+                let imageUrl = result.info.secure_url;
+                let title = prompt("أدخل اسم المنتج:", "منتج جديد");
+                let price = prompt("أدخل السعر (مثال: ₪ 80):", "₪ 80");
+                if (title && price) {
+                    addNewProductUI(title, price, imageUrl);
+                }
+            }
+        });
+
+        document.getElementById("upload_widget").addEventListener("click", function(){
+            myWidget.open();
+        }, false);
+
+        function addNewProductUI(title, price, imageUrl) {
+            let container = document.getElementById('productContainer');
+            let cardHTML = `
+                <div class="card">
+                    <div class="ph-wrap">
+                        <img src="${imageUrl}" alt="${title}" class="product-img">
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">${title}</div>
+                        <div class="price">${price}</div>
+                    </div>
+                    <button class="order-btn" onclick="sendOrderToWhatsApp('${title}', '', '', '${imageUrl}', '${price}')">
+                        اطلب عبر الواتساب
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHTML);
+        }
+
+        function sendOrderToWhatsApp(productName, selectedSize, selectedColor, imageUrl, price) {
+            let phone = "972598904686";
+            let message = `مرحباً، أود طلب المنتج التالي:\n`;
+            message += `- *المنتج:* ${productName}\n`;
+            if (selectedSize) message += `- *المقاس:* ${selectedSize}\n`;
+            if (selectedColor) message += `- *اللون:* ${selectedColor}\n`;
+            if (price) message += `- *السعر:* ${price}\n`;
+            if (imageUrl) message += `- *رابط الصورة:* ${imageUrl}\n`;
+            
+            let encodedMsg = encodeURIComponent(message);
+            window.open(`https://wa.me/${phone}?text=${encodedMsg}`, '_blank');
+        }
+    </script>
+</body>
+</html>
