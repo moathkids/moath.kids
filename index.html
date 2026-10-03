@@ -11,7 +11,9 @@
     <meta name="theme-color" content="#ffffff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'">
-    <link rel="canonical" href="./">
+    <script>if(/[?&]admin\b/.test(location.search)){var _r=document.querySelector('meta[name=robots]');if(_r)_r.content='noindex,nofollow'}</script>
+    <link rel="canonical" href="https://moathkids.github.io/moath.kids/">
+    <meta property="og:url" content="https://moathkids.github.io/moath.kids/">
     <link rel="icon" id="favicon" href="data:,">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -709,6 +711,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
 .more-wrap{grid-column:1/-1;flex-basis:100%;width:100%;display:flex;justify-content:center;padding:20px 0 8px}
 .more-btn{min-width:220px;min-height:48px;padding:12px 28px;font-size:16px;border-radius:26px!important}
 #adminBar.ab2 a.btn.tile{text-decoration:none}
+@media(max-width:720px){.float-cart{display:none!important}}
 </style>
 </head>
 <body>
@@ -2313,7 +2316,7 @@ window.track = function (ev, d) {
     if (typeof fbq !== 'function' || document.body.classList.contains('admin')) return;
     d = d || {};
     if (ev === 'Contact' && d.content_ids) return;           // الطلب = Lead فقط
-    if (ev === 'ViewContent') { const k = (d.content_ids || [''])[0]; if (_seen.has(k)) return; _seen.add(k); }
+    if (ev === 'ViewContent') { const k = (d.content_ids || [''])[0]; if (_seen.has(k)) return; _seen.add(k); try { if (sessionStorage.getItem('vc_' + k)) return; sessionStorage.setItem('vc_' + k, '1'); } catch (e) {} }
     fbq('track', ev, d);
   } catch (e) {}
 };
@@ -2425,7 +2428,7 @@ window.restoreJson = function (inp) {
 };
 
 /* ===== 13: سياسات رسمية ===== */
-const PRIV = 'نحترم خصوصيتك. لا يتطلب الموقع إنشاء حساب، ولا نطلب بيانات بطاقة أو دفعًا عبر الموقع.\nعند إرسال طلبك عبر الواتساب نتلقى فقط ما تكتبه بنفسك (الطلب، الاسم، العنوان) ونستخدمه لتجهيز طلبك والتواصل معك، ولا نبيعه لأي طرف.\nيستخدم الموقع بكسل ميتا (Meta Pixel) لقياس فعالية إعلاناتنا، وقد يسجّل أحداث تصفح مثل مشاهدة منتج أو الإضافة للعربة. يمكنك منع ذلك من إعدادات متصفحك أو بإضافات حجب التتبع.\nنحفظ عربتك واختياراتك (الاسم والمنطقة) على جهازك فقط.\nلطلب حذف بياناتك أو لأي استفسار راسلنا على الواتساب.';
+const PRIV = 'نحترم خصوصيتك. لا يتطلب الموقع إنشاء حساب، ولا نطلب بيانات بطاقة أو دفعًا عبر الموقع.\nعند إرسال طلبك عبر الواتساب نتلقى فقط ما تكتبه بنفسك (الطلب، الاسم، العنوان) ونستخدمه لتجهيز طلبك والتواصل معك، ولا نبيعه لأي طرف.\nيستخدم الموقع بكسل ميتا (Meta Pixel) لقياس فعالية إعلاناتنا، وقد يسجّل أحداث تصفح مثل مشاهدة منتج أو الإضافة للعربة. يمكنك منع ذلك من إعدادات متصفحك أو بإضافات حجب التتبع.\nنحفظ عربتك واختياراتك على جهازك. وعند إرسال الطلب نحفظ على خادمنا رقم الطلب والمنتجات والاسم والمنطقة (إن كتبتها) ومعرّفات تقنية للمتصفح والإعلان لنربط الطلب بإعلاننا ونقيس أداءه.\nلطلب حذف بياناتك أو لأي استفسار راسلنا على الواتساب.';
 window.shownPages = function () { return (DATA.settings.pages || []).map(x => /الخصوصية/.test(x.title) && /لا نجمع بياناتك الشخصية/.test(x.text || '') ? { title: x.title, text: PRIV } : x).filter(x => x.title && x.text && !/\[\[/.test(x.text)); };
 function tpl() {
   const s = DATA.settings, dl = delList(), cur = s.currency, d = new Date().toLocaleDateString('ar-EG');
@@ -2548,7 +2551,10 @@ $('pdpBody').addEventListener('click', e => {
   if (size && !sizeOk(p, color, size)) return toast('هذا المقاس غير متوفر بهذا اللون');
   if (p.track && qtyOf(p, color, size) <= 0) return toast('هذا الخيار غير متوفر');
   const m = 'مرحباً، أريد طلب: ' + p.name + codeTag(p) + (size ? ' - المقاس: ' + size : '') + (color ? ' - اللون: ' + color : '') + ' - ' + DATA.settings.currency + fmt(p.price) + (baseUrl() ? '\n' + url : '');
-  track('Lead', pdata(p)); window.open(waLink(m), '_blank');
+  const it = [{ p, c: { color, size, qty: 1 } }], ref = orderRef();
+  track('Lead', pdata(p)); pushOrder(it);
+  setTimeout(() => { try { sessionStorage.removeItem('mk_ref'); } catch (x) {} }, 400);
+  window.open(waLink(m + '\n(رقم الطلب: ' + ref + ')'), '_blank');
 });
 let _tx = null;
 $('pdpBody').addEventListener('touchstart', e => { _tx = e.target.closest('.pdp-main') ? e.touches[0].clientX : null; }, { passive: true });
@@ -2741,8 +2747,8 @@ async function saveCustomer(ph, name, city, addr, total, email) {
 let EDGE = null;
 async function edgeReady() {
   if (EDGE !== null) return EDGE;
-  try { const { data, error } = await sb.functions.invoke('meta-capi', { body: { ping: true } }); EDGE = !error && !!(data && data.ok && data.configured); }
-  catch (e) { EDGE = false; }
+  try { const { data, error } = await sb.functions.invoke('meta-capi', { body: { ping: true } }); if (error) return false; EDGE = !!(data && data.ok && data.configured); }
+  catch (e) { return false; }
   return EDGE;
 }
 async function postMeta(ev, tok, c) {
@@ -3120,6 +3126,7 @@ async function cmsCreateOrder(order) {
 /* Moath Kids: طبقة قاعدة البيانات (Supabase) */
 (function () {
   try { localStorage.removeItem('moathkids_store_v2'); } catch (e) {}
+  try { localStorage.removeItem('mk_gh_tok_l'); localStorage.removeItem('moathkids_gh'); sessionStorage.removeItem('mk_gh_tok'); } catch (e) {}
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/i;
   const KNOWN = ['name','phone','currency','logo','cover','title','tagline','announce','address','instagram','facebook','tiktok','deliveryTime','sizeGuide','delivery','pages'];
   const SKIP = ['adminHash','adminHash2','adminSalt'];
