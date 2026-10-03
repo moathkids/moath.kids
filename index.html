@@ -2745,20 +2745,42 @@ async function saveCustomer(ph, name, city, addr, total, email) {
 
 /* ---------- ميتا ---------- */
 let EDGE = null;
+const CAPI_FN = 'bright-task'; /* اسم دالة Supabase المنشورة */
 async function edgeReady() {
-  if (EDGE !== null) return EDGE;
-  try { const { data, error } = await sb.functions.invoke('meta-capi', { body: { ping: true } }); if (error) return false; EDGE = !!(data && data.ok && data.configured); }
-  catch (e) { return false; }
-  return EDGE;
+  if (EDGE === true) return true;
+  try {
+    const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { ping: true } });
+    if (!error) { EDGE = !!(data && data.ok); return EDGE; }
+    /* الدالة ترد 400 «customer required» فقط بعد نجاح فحص الأدمن ووجود توكن ميتا */
+    const r = error.context;
+    if (r && r.status === 400) { const j = await r.json().catch(() => ({})); EDGE = !!(j && j.error === 'customer required'); return EDGE; }
+  } catch (e) {}
+  return false;
 }
-async function postMeta(ev, tok, c) {
-  if (await edgeReady()) {
+async function edgeErr(error) {
+  try { const j = await error.context.json(); return String((j && j.error) || error.message || 'فشل'); }
+  catch (e) { return String((error && error.message) || 'فشل'); }
+}
+function edgeBody(s, c) {
+  const parts = String(s.customer_name || '').trim().split(/\s+/);
+  return {
+    order_id: String(s.ref || s.id),
+    value: Number(s.total),
+    customer: { phone: s.customer_phone, first_name: parts[0] || '', last_name: parts.slice(1).join(' '),
+      city: String(s.city || '').replace(/[\s\p{P}]/gu, ''), email: s.email || '' },
+    fbp: s.fbp || '', fbc: s.fbc || '', client_user_agent: s.ua || '',
+    event_source_url: s.source_url || (location.origin + location.pathname),
+    test_event_code: c.test || ''
+  };
+}
+async function postMeta(ev, tok, c, sale) {
+  if (sale && await edgeReady()) {
     try {
-      const { data, error } = await sb.functions.invoke('meta-capi', { body: { event: ev, test: c.test || '' } });
-      if (error) throw error;
+      const { data, error } = await sb.functions.invoke(CAPI_FN, { body: edgeBody(sale, c) });
+      if (error) throw new Error(await edgeErr(error));
       if (data && data.ok) return { s: 'ok', n: c.test ? 'وصل (اختبار)' : 'وصل لميتا' };
       if (!tok) return { s: 'err', n: String((data && data.error) || 'فشل').slice(0, 140) };
-    } catch (e) { if (!tok) return { s: 'err', n: 'تعذر الإرسال عبر الخادم: ' + String((e && e.message) || e).slice(0, 100) }; }
+    } catch (e) { if (!tok) return { s: 'err', n: String((e && e.message) || e).slice(0, 140) }; }
   }
   const body = new URLSearchParams(); body.set('data', JSON.stringify([ev])); body.set('access_token', tok); if (c.test) body.set('test_event_code', c.test);
   let r, j = {};
@@ -2780,7 +2802,7 @@ async function sendMeta(s, tok, c) {
     custom_data: { value: Number(s.total), currency: 'ILS', content_type: 'product', content_ids: items.map(x => x.pid),
       contents: items.map(x => ({ id: x.pid, quantity: x.qty, item_price: x.price })), num_items: items.reduce((a, x) => a + x.qty, 0), order_id: s.ref || s.id } };
   if (s.source_url) ev.event_source_url = s.source_url;
-  return await postMeta(ev, tok, c);
+  return await postMeta(ev, tok, c, s);
 }
 
 /* ---------- التأكيد ---------- */
@@ -3419,6 +3441,122 @@ async function cmsCreateOrder(order) {
     window.renderProducts = function () { const r = _rp.apply(this, arguments); arm(); return r; };
     arm();
   } catch (err) { console.warn('perf layer skipped', err); }
+})();
+</script>
+
+<script>
+/* Moath Kids: إشعار الطلبات الواردة — «تأكيد» يفتح نافذة البيع بالبيانات مملوءة، «إلغاء» يخفي الطلب. يقرأ جدول leads فقط ولا يغيّر أي منطق قائم. */
+(function () {
+  try {
+    document.querySelectorAll('[data-mk3]').forEach(n => n.remove());
+    const bar = document.getElementById('adminBar');
+    if (!bar || typeof sb === 'undefined') return;
+    const isAdm = () => document.body.classList.contains('admin');
+    const cur = () => (DATA.settings && DATA.settings.currency) || '';
+    let ORD = [], seen = null, timer = null, PENDING = null;
+
+    /* الشريط الأحمر داخل شريط الإدارة */
+    const banner = document.createElement('button');
+    banner.type = 'button'; banner.setAttribute('data-mk3', '');
+    banner.style.cssText = 'display:none;order:-1;width:100%;max-width:640px;margin:0 auto;min-height:46px;border:0;border-radius:12px;background:#d9334f;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer;padding:8px 12px';
+    bar.insertBefore(banner, bar.firstChild);
+
+    /* نافذة الطلبات */
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg'; modal.id = 'ordersModal'; modal.setAttribute('data-mk3', '');
+    modal.innerHTML = '<div class="modal" style="max-width:560px"><h3>📩 الطلبات الواردة</h3><div id="ordList"></div>' +
+      '<div class="modal-actions" style="margin-top:12px"><button type="button" class="btn" onclick="closeModal(\'ordersModal\')">إغلاق</button></div></div>';
+    document.body.appendChild(modal);
+
+    function render() {
+      const n = ORD.length, show = isAdm() && n > 0;
+      banner.style.display = show ? 'block' : 'none';
+      banner.textContent = '📩 ' + n + (n === 1 ? ' طلب جديد' : ' طلبات جديدة') + ' بانتظار التأكيد أو الإلغاء';
+      const box = document.getElementById('ordList');
+      box.innerHTML = n ? ORD.map((o, i) =>
+        '<div style="padding:10px 0;border-bottom:1px solid #eee"><b>' + esc(o.ref) + '</b> · ' + new Date(o.created_at).toLocaleString('ar-EG') +
+        ((o.name || o.region) ? '<br>' + esc(o.name || '') + (o.region ? ' · ' + esc(o.region) : '') : '') +
+        '<br><small>' + (o.items || []).map(x => esc(x.name) + (x.color ? ' ' + esc(x.color) : '') + (x.size ? ' ' + esc(x.size) : '') + ' ×' + (x.qty || 1)).join('، ') + '</small>' +
+        '<br><b>' + esc(cur()) + fmt(o.total || 0) + '</b>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn green" style="flex:2;min-height:44px" data-ok="' + i + '">✅ تأكيد</button>' +
+        '<button type="button" class="btn danger" style="flex:1;min-height:44px" data-no="' + i + '">✖ إلغاء</button></div></div>').join('')
+        : '<div class="cart-note">لا توجد طلبات جديدة ✓</div>';
+    }
+
+    async function load(quiet) {
+      if (!isAdm()) return;
+      try {
+        const { data, error } = await sb.from('leads').select('*').eq('status', 'new').order('created_at', { ascending: false }).limit(30);
+        if (error) throw error;
+        let list = data || [];
+        /* أمان إضافي: لا نعرض طلبًا سُجّل له بيع فعلًا */
+        if (list.length) {
+          const { data: sold } = await sb.from('sales').select('ref').in('ref', list.map(x => x.ref));
+          const done = new Set((sold || []).map(x => x.ref));
+          list = list.filter(x => !done.has(x.ref));
+        }
+        ORD = list;
+        const fresh = seen ? ORD.filter(x => !seen.has(x.ref)).length : 0;
+        seen = new Set(ORD.map(x => x.ref));
+        if (quiet && fresh) { toast('📩 وصل ' + fresh + ' طلب جديد'); try { navigator.vibrate && navigator.vibrate(200); } catch (e) {} }
+      } catch (e) { ORD = []; }
+      render();
+    }
+
+    function sync() {
+      if (isAdm()) {
+        if (!timer) {
+          load(false).then(() => { if (ORD.length) toast('📩 عندك ' + ORD.length + ' طلب بانتظار التأكيد'); });
+          timer = setInterval(() => load(true), 45000);
+        }
+      } else if (timer) { clearInterval(timer); timer = null; ORD = []; seen = null; render(); }
+    }
+    new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && isAdm()) load(true); });
+    try { sb.auth.onAuthStateChange(() => { setTimeout(() => { if (isAdm()) load(true); }, 0); }); } catch (e) {}
+
+    banner.onclick = () => { render(); openModal('ordersModal'); };
+
+    /* تأكيد: يفتح نافذة البيع ثم يختار الطلب تلقائيًا بعد اكتمال تحميل القائمة */
+    const _q = window.slQuality;
+    if (typeof _q === 'function') window.slQuality = function () {
+      const r = _q.apply(this, arguments);
+      if (PENDING) {
+        const s = document.getElementById('sl_lead');
+        if (s && [...s.options].some(o => o.value === PENDING)) { s.value = PENDING; PENDING = null; window.slLead(); }
+      }
+      return r;
+    };
+    function confirmOrder(ref) {
+      if (typeof window.openSale !== 'function' || typeof window.slQuality !== 'function') return toast('افتح «تم البيع» واختر الطلب من القائمة');
+      const s = document.getElementById('sl_lead'); if (s) s.innerHTML = '';
+      PENDING = ref; setTimeout(() => { PENDING = null; }, 8000);
+      window.openSale();
+    }
+
+    modal.addEventListener('click', async e => {
+      const ok = e.target.closest('[data-ok]'), no = e.target.closest('[data-no]');
+      if (ok) { const o = ORD[+ok.dataset.ok]; if (!o) return; closeModal('ordersModal'); confirmOrder(o.ref); }
+      if (no) {
+        const o = ORD[+no.dataset.no]; if (!o) return;
+        if (!confirm('إلغاء الطلب ' + o.ref + '؟\nلن يظهر في قائمة الطلبات ولن يُسجَّل كبيعة.')) return;
+        no.disabled = true;
+        const { data, error } = await sb.from('leads').update({ status: 'cancelled' }).eq('ref', o.ref).select('ref');
+        if (error || !data || !data.length) { no.disabled = false; return toast('تعذر الإلغاء' + (error && error.message ? ': ' + error.message : ' — صلاحية الجدول')); }
+        ORD = ORD.filter(x => x.ref !== o.ref); render(); toast('تم إلغاء الطلب');
+      }
+    });
+
+    /* بعد أي تأكيد بيع يتحدّث العدّاد */
+    const _s = window.sendSale;
+    if (typeof _s === 'function') window.sendSale = async function () {
+      const r = await _s.apply(this, arguments);
+      setTimeout(() => load(true), 400);
+      return r;
+    };
+
+    sync();
+  } catch (err) { console.warn('orders alert skipped', err); }
 })();
 </script>
 </body>
