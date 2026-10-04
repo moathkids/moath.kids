@@ -871,6 +871,10 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
                     <input type="number" id="f_old" min="0" step="any" inputmode="decimal">
                 </div>
             </div>
+            <div class="field">
+                <label for="f_cost">سعر التكلفة (للإدارة فقط)</label>
+                <input type="number" id="f_cost" min="0" step="any" inputmode="decimal">
+            </div>
             <div class="field" style="display:none">
                 <label for="f_cat">القسم</label>
                 <select id="f_cat" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:16px;font-family:inherit;background:#fff">
@@ -1553,6 +1557,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
             $('f_code').value = (p && p.code) || nextCode();
             $('f_price').value = p ? p.price : '';
             $('f_old').value = p && p.oldPrice ? p.oldPrice : '';
+            $('f_cost').value = p && p.cost ? p.cost : '';
             $('f_cat').value = p ? p.category || '' : '';
             $('f_desc').value = p ? p.desc || '' : '';
             $('f_file').value = '';
@@ -1651,6 +1656,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
                 id, code, name, price, avail,
                 oldPrice: isNaN(old) ? null : old,
                 category: '',
+                cost: Math.max(0, parseFloat($('f_cost').value) || 0),
                 sizes,
                 color: cols[0].name,
                 colorGender: cols[0].gender,
@@ -2619,9 +2625,13 @@ window.slQuality = function () {
 async function loadStats() {
   try {
     const since = new Date(Date.now() - 30 * 864e5).toISOString();
-    const { data, error } = await sb.from('sales').select('total,meta_status').gte('created_at', since).limit(1000); if (error) throw error;
+    let r = await sb.from('sales').select('total,cost,meta_status').gte('created_at', since).limit(1000), hasCost = true;
+    if (r.error) { hasCost = false; r = await sb.from('sales').select('total,meta_status').gte('created_at', since).limit(1000); }
+    const { data, error } = r; if (error) throw error;
     const n = data.length, sum = data.reduce((a, x) => a + Number(x.total || 0), 0), ok = data.filter(x => x.meta_status === 'ok').length;
-    $('sl_stats').innerHTML = n ? n + ' بيعة · ' + esc(cur()) + fmt(sum) + ' · متوسط الطلب ' + esc(cur()) + fmt(sum / n) + '<br>وصلت لميتا: ' + ok + ' من ' + n : 'لا مبيعات خلال ٣٠ يومًا.';
+    const cost = data.reduce((a, x) => a + Number(x.cost || 0), 0);
+    const profitTxt = hasCost ? '<br>التكلفة: ' + esc(cur()) + fmt(cost) + ' · <b>الربح: ' + esc(cur()) + fmt(sum - cost) + '</b>' : '';
+    $('sl_stats').innerHTML = n ? n + ' بيعة · ' + esc(cur()) + fmt(sum) + ' · متوسط الطلب ' + esc(cur()) + fmt(sum / n) + profitTxt + '<br>وصلت لميتا: ' + ok + ' من ' + n : 'لا مبيعات خلال ٣٠ يومًا.';
   } catch (e) { $('sl_stats').textContent = ''; }
 }
 
@@ -2818,7 +2828,7 @@ async function renderSale() {
   catch (e) { $('saleLog').innerHTML = 'تعذر تحميل المبيعات. تأكد من تشغيل ملف SQL في Supabase.'; return; }
   const ic = { ok: '✅', unk: '❔', err: '❌', pending: '⏳' };
   $('saleLog').innerHTML = L.length ? L.map(x => '<div style="padding:6px 0;border-bottom:1px solid #eee">' + (ic[x.meta_status] || '') + ' ' + new Date(x.created_at).toLocaleString('ar-EG') +
-    '<br><b>' + esc(x.customer_name) + '</b> · ' + esc(x.customer_phone) + ' · ' + esc(cur()) + fmt(x.total) + (x.ref ? ' · ' + esc(x.ref) : '') +
+    '<br><b>' + esc(x.customer_name) + '</b> · ' + esc(x.customer_phone) + ' · ' + esc(cur()) + fmt(x.total) + (x.cost != null ? ' · ربح ' + esc(cur()) + fmt(Number(x.total || 0) - Number(x.cost || 0)) : '') + (x.ref ? ' · ' + esc(x.ref) : '') +
     '<br><small>' + (x.items || []).map(i => esc(i.name) + (i.color ? ' ' + esc(i.color) : '') + (i.size ? ' ' + esc(i.size) : '') + '×' + i.qty).join('، ') +
     (x.meta_note ? ' — ' + esc(x.meta_note) : '') + '</small>' +
     (x.meta_status !== 'ok' ? ' <button type="button" class="btn" style="padding:2px 8px" onclick="resendSale(\'' + esc(x.id) + '\')">إرسال لميتا</button>' : '') + stSel(x) + '</div>').join('') : 'لا توجد مبيعات بعد.';
@@ -2971,6 +2981,14 @@ async function cmsLoadStore() {
       variants: cols.slice(1).map(c => ({ color: c.name, image: c.image, thumb: c.thumb, gender: c.gender }))
     };
   });
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const { data: cs } = await sb.from('product_costs').select('product_id,cost');
+      const m = {}; (cs || []).forEach(x => { m[x.product_id] = Number(x.cost) || 0; });
+      products.forEach(pr => { pr.cost = m[pr.id] || 0; });
+    }
+  } catch (e) { console.warn('costs not loaded', e); }
   return { updatedAt: Date.now(), settings, products };
 }
 
@@ -3028,6 +3046,11 @@ async function cmsSaveProduct(product) {
   if (product.id) row.id = product.id;
   const { data: p, error } = await sb.from('products').upsert(row).select('id').single();
   if (error) throw error;
+
+  if (product.cost !== undefined) {
+    const { error: ke } = await sb.from('product_costs').upsert({ product_id: p.id, cost: Number(product.cost) || 0, updated_at: new Date().toISOString() });
+    if (ke) throw ke;
+  }
 
   // إعادة بناء الألوان والمقاسات: نحتفظ بنسخة من القديم، نحذفه ثم نضيف الجديد، وإذا فشل شيء نُرجع القديم كما كان
   const seen = new Set();
@@ -3174,7 +3197,7 @@ async function cmsCreateOrder(order) {
         const oldId = p.id;
         const newId = await cmsSaveProduct({
           id: UUID.test(p.id) ? p.id : undefined, code: p.code, name: p.name, price: p.price, oldPrice: p.oldPrice,
-          category: p.category, desc: p.desc, image: p.image, thumb: p.thumb, colors: colorsOf(p)
+          category: p.category, desc: p.desc, image: p.image, thumb: p.thumb, cost: p.cost, colors: colorsOf(p)
         });
         delete ST.snap[oldId]; p.id = newId; ST.snap[newId] = JSON.stringify(p);
       }
