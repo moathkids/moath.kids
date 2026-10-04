@@ -871,7 +871,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
                     <input type="number" id="f_old" min="0" step="any" inputmode="decimal">
                 </div>
             </div>
-            <div class="field">
+            <div class="field" style="display:none">
                 <label for="f_cat">القسم</label>
                 <select id="f_cat" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:16px;font-family:inherit;background:#fff">
                     <option value="">للجنسين (يظهر في القسمين)</option>
@@ -1476,7 +1476,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
                 (formColors.length > 1 ? '<button type="button" class="btn danger" data-act="delcolor">حذف</button>' : '') + '</div>' +
                 '<div class="crow"><input type="text" data-f="name" value="' + esc(c.name) + '" placeholder="اسم اللون (مثال: وردي)" aria-label="اسم اللون">' +
                 '<select data-f="gender" aria-label="لمن هذا اللون" style="' + sel + '">' +
-                [['', 'للجنسين'], ['ذكر', 'ذكر'], ['أنثى', 'أنثى']].map(g => '<option value="' + g[0] + '"' + (c.gender === g[0] ? ' selected' : '') + '>' + g[1] + '</option>').join('') + '</select></div>' +
+                [['', 'محايد (القسمين)'], ['ذكر', 'ذكر'], ['أنثى', 'أنثى']].map(g => '<option value="' + g[0] + '"' + (c.gender === g[0] ? ' selected' : '') + '>' + g[1] + '</option>').join('') + '</select></div>' +
                 (ci === 0
                     ? '<small style="display:block;margin:-2px 0 8px">صورة هذا اللون هي «صورة المنتج الرئيسية» أعلاه.</small>'
                     : '<div class="cimg"><div class="vthumb">' + (c.image ? '<img src="' + esc(c.image) + '" alt="">' : '📷') + '</div><div style="flex:1;min-width:0"><input type="file" accept="image/*" data-f="img" aria-label="صورة اللون" style="font-size:13px;max-width:100%"><small>صورة هذا اللون (اختيارية)</small></div></div>') +
@@ -1527,7 +1527,8 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
             return String(n.length ? Math.max(...n) + 1 : 1);
         }
         function colorsFromProduct(p) {
-            const mk = (name, gender, image, thumb) => ({ name, gender: gender || '', image: image || '', thumb: thumb || '',
+            const pg = GSET.includes(p.category) ? p.category : '';
+            const mk = (name, gender, image, thumb) => ({ name, gender: gender || pg, image: image || '', thumb: thumb || '',
                 sizes: sizesList(p).filter(z => z && sizeOk(p, name, z)).map(z => ({ size: z, qty: p.track ? Math.max(0, parseInt((p.inv || {})[ik(name, z)], 10) || 0) : 0 })) });
             const list = [mk(p.color || '', p.colorGender, '', '')];
             variantsOf(p).forEach(v => { if (!list.some(c => c.name === v.color)) list.push(mk(v.color, v.gender, v.image, v.thumb)); });
@@ -1649,7 +1650,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
             const item = {
                 id, code, name, price, avail,
                 oldPrice: isNaN(old) ? null : old,
-                category: $('f_cat').value.trim(),
+                category: '',
                 sizes,
                 color: cols[0].name,
                 colorGender: cols[0].gender,
@@ -3028,9 +3029,21 @@ async function cmsSaveProduct(product) {
   const { data: p, error } = await sb.from('products').upsert(row).select('id').single();
   if (error) throw error;
 
-  // إعادة بناء الألوان والمقاسات: نضيف الجديد أولاً ثم نحذف القديم بعد النجاح (حتى لا يضيع شيء عند الفشل)
-  const { data: oldCols } = await sb.from('product_colors').select('id').eq('product_id', p.id);
-  const newIds = [];
+  // إعادة بناء الألوان والمقاسات: نحتفظ بنسخة من القديم، نحذفه ثم نضيف الجديد، وإذا فشل شيء نُرجع القديم كما كان
+  const seen = new Set();
+  for (const c of product.colors) {
+    const k = (c.name || '').trim();
+    if (seen.has(k)) throw new Error('يوجد لونان بنفس الاسم في هذا المنتج: ' + (k || '(بدون اسم)'));
+    seen.add(k);
+  }
+  const { data: oldCols } = await sb.from('product_colors').select('*').eq('product_id', p.id);
+  let oldStock = [];
+  if (oldCols && oldCols.length) {
+    const r = await sb.from('product_stock').select('*').in('color_id', oldCols.map(x => x.id));
+    oldStock = r.data || [];
+  }
+  const del = await sb.from('product_colors').delete().eq('product_id', p.id);
+  if (del.error) throw del.error;
   try {
     for (let i = 0; i < product.colors.length; i++) {
       const c = product.colors[i];
@@ -3039,15 +3052,17 @@ async function cmsSaveProduct(product) {
         image_url: c.image || '', thumb_url: c.thumb || '', position: i
       }).select('id').single();
       if (ce) throw ce;
-      newIds.push(col.id);
       const stock = c.sizes.map((s, j) => ({ color_id: col.id, size: s.size, qty: Math.max(0, parseInt(s.qty, 10) || 0), position: j }));
       if (stock.length) { const { error: se } = await sb.from('product_stock').insert(stock); if (se) throw se; }
     }
   } catch (err) {
-    if (newIds.length) { try { await sb.from('product_colors').delete().in('id', newIds); } catch (x) {} }
+    try {
+      await sb.from('product_colors').delete().eq('product_id', p.id);
+      if (oldCols && oldCols.length) await sb.from('product_colors').insert(oldCols);
+      if (oldStock.length) await sb.from('product_stock').insert(oldStock);
+    } catch (x) { console.error('restore failed', x); }
     throw err;
   }
-  if (oldCols && oldCols.length) await sb.from('product_colors').delete().in('id', oldCols.map(x => x.id));
   return p.id;
 }
 
