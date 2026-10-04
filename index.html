@@ -3045,14 +3045,16 @@ async function cmsSaveProduct(product) {
   const del = await sb.from('product_colors').delete().eq('product_id', p.id);
   if (del.error) throw del.error;
   try {
-    for (let i = 0; i < product.colors.length; i++) {
-      const c = product.colors[i];
-      const { data: col, error: ce } = await sb.from('product_colors').insert({
+    if (product.colors.length) {
+      const rows = product.colors.map((c, i) => ({
         product_id: p.id, name: c.name || '', gender: c.gender || '',
         image_url: c.image || '', thumb_url: c.thumb || '', position: i
-      }).select('id').single();
+      }));
+      const { data: cols, error: ce } = await sb.from('product_colors').insert(rows).select('id, position');
       if (ce) throw ce;
-      const stock = c.sizes.map((s, j) => ({ color_id: col.id, size: s.size, qty: Math.max(0, parseInt(s.qty, 10) || 0), position: j }));
+      const byPos = {}; (cols || []).forEach(x => { byPos[x.position] = x.id; });
+      const stock = [];
+      product.colors.forEach((c, i) => c.sizes.forEach((z, j) => stock.push({ color_id: byPos[i], size: z.size, qty: Math.max(0, parseInt(z.qty, 10) || 0), position: j })));
       if (stock.length) { const { error: se } = await sb.from('product_stock').insert(stock); if (se) throw se; }
     }
   } catch (err) {
@@ -3164,8 +3166,11 @@ async function cmsCreateOrder(order) {
       for (const id of Object.keys(ST.snap)) if (!now.has(id)) { if (UUID.test(id)) await cmsDeleteProduct(id); delete ST.snap[id]; }
       for (const p of DATA.products) {
         if (ST.snap[p.id] === JSON.stringify(p)) continue;
-        p.image = await up(p.image, 'products'); p.thumb = await up(p.thumb, 'thumbs');
-        for (const v of (p.variants || [])) { v.image = await up(v.image, 'products'); v.thumb = await up(v.thumb, 'thumbs'); }
+        await Promise.all([
+          up(p.image, 'products').then(u => { p.image = u; }), up(p.thumb, 'thumbs').then(u => { p.thumb = u; })
+        ].concat((p.variants || []).map(v => Promise.all([
+          up(v.image, 'products').then(u => { v.image = u; }), up(v.thumb, 'thumbs').then(u => { v.thumb = u; })
+        ]))));
         const oldId = p.id;
         const newId = await cmsSaveProduct({
           id: UUID.test(p.id) ? p.id : undefined, code: p.code, name: p.name, price: p.price, oldPrice: p.oldPrice,
