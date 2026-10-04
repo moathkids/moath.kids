@@ -2759,8 +2759,8 @@ async function sendToMeta(saleId, c) {
     const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { sale_id: saleId, test_event_code: c.test || '' } });
     if (error) throw new Error(await edgeErr(error));
     if (data && data.ok) return { s: c.test ? 'unk' : 'ok' };
-    return { s: 'err' };
-  } catch (e) { console.warn(e); return { s: 'err' }; }
+    return { s: 'err', msg: String((data && (data.error || data.message || data.detail)) || JSON.stringify(data || '')).slice(0, 160) };
+  } catch (e) { console.warn(e); return { s: 'err', msg: String((e && e.message) || e).slice(0, 160) }; }
 }
 
 /* ---------- التأكيد: دالة واحدة في القاعدة تسجّل البيع والزبون وتنقص المخزون معًا ---------- */
@@ -2802,13 +2802,13 @@ window.sendSale = async function () {
     const m = await sendToMeta(saleId, c);
     LINES = []; LEAD = null; renderLines(); ['sl_ph', 'sl_nm', 'sl_em', 'sl_city', 'sl_addr', 'sl_ref'].forEach(i => $(i).value = ''); $('sl_known').textContent = '';
     slFilter(); await loadLeads(); slQuality(); await renderSale();
-    toast(m.s === 'ok' ? 'تم البيع ✓ ووصل لميتا' : m.s === 'unk' ? 'تم البيع ✓ ووصل لميتا (اختبار)' : 'تم البيع ✓ لكن فشل إرسال ميتا، اضغط «إرسال لميتا» من آخر المبيعات');
+    toast(m.s === 'ok' ? 'تم البيع ✓ ووصل لميتا' : m.s === 'unk' ? 'تم البيع ✓ ووصل لميتا (اختبار)' : 'تم البيع ✓ لكن فشل إرسال ميتا' + (m.msg ? ' (' + m.msg + ')' : '') + '، اضغط «إرسال لميتا» من آخر المبيعات');
   } catch (e) { console.error(e); toast('تعذر حفظ البيع، لم يتغير شيء: ' + (e.message || e)); }
   BUSY = false; btn.disabled = false;
 };
 window.resendSale = async function (id) {
   const m = await sendToMeta(id, getCfg());
-  await renderSale(); toast(m.s === 'ok' ? 'وصل لميتا ✓' : m.s === 'unk' ? 'وصل (اختبار)' : 'فشل الإرسال، راجع آخر المبيعات');
+  await renderSale(); toast(m.s === 'ok' ? 'وصل لميتا ✓' : m.s === 'unk' ? 'وصل (اختبار)' : 'فشل الإرسال' + (m.msg ? ': ' + m.msg : '') + '، راجع آخر المبيعات');
 };
 
 /* ---------- العرض ---------- */
