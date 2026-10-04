@@ -3028,18 +3028,26 @@ async function cmsSaveProduct(product) {
   const { data: p, error } = await sb.from('products').upsert(row).select('id').single();
   if (error) throw error;
 
-  // إعادة بناء الألوان والمقاسات (حذف القديم ثم إضافة الجديد)
-  await sb.from('product_colors').delete().eq('product_id', p.id);
-  for (let i = 0; i < product.colors.length; i++) {
-    const c = product.colors[i];
-    const { data: col, error: ce } = await sb.from('product_colors').insert({
-      product_id: p.id, name: c.name || '', gender: c.gender || '',
-      image_url: c.image || '', thumb_url: c.thumb || '', position: i
-    }).select('id').single();
-    if (ce) throw ce;
-    const stock = c.sizes.map((s, j) => ({ color_id: col.id, size: s.size, qty: Math.max(0, parseInt(s.qty, 10) || 0), position: j }));
-    if (stock.length) { const { error: se } = await sb.from('product_stock').insert(stock); if (se) throw se; }
+  // إعادة بناء الألوان والمقاسات: نضيف الجديد أولاً ثم نحذف القديم بعد النجاح (حتى لا يضيع شيء عند الفشل)
+  const { data: oldCols } = await sb.from('product_colors').select('id').eq('product_id', p.id);
+  const newIds = [];
+  try {
+    for (let i = 0; i < product.colors.length; i++) {
+      const c = product.colors[i];
+      const { data: col, error: ce } = await sb.from('product_colors').insert({
+        product_id: p.id, name: c.name || '', gender: c.gender || '',
+        image_url: c.image || '', thumb_url: c.thumb || '', position: i
+      }).select('id').single();
+      if (ce) throw ce;
+      newIds.push(col.id);
+      const stock = c.sizes.map((s, j) => ({ color_id: col.id, size: s.size, qty: Math.max(0, parseInt(s.qty, 10) || 0), position: j }));
+      if (stock.length) { const { error: se } = await sb.from('product_stock').insert(stock); if (se) throw se; }
+    }
+  } catch (err) {
+    if (newIds.length) { try { await sb.from('product_colors').delete().in('id', newIds); } catch (x) {} }
+    throw err;
   }
+  if (oldCols && oldCols.length) await sb.from('product_colors').delete().in('id', oldCols.map(x => x.id));
   return p.id;
 }
 
@@ -3307,16 +3315,16 @@ async function cmsCreateOrder(order) {
 
     /* مؤشر الحفظ */
     const TXT = { saved: 'محفوظ ومنشور للزبائن', dirty: 'تعديلات بانتظار الحفظ', saving: 'جاري الحفظ…', error: 'فشل الحفظ — اضغط للإعادة' };
-    let state = 'saved', last = null, tries = 0, rt = null;
+    let state = 'saved', last = null, tries = 0, rt = null, errMsg = '';
     const p2 = n => String(n).padStart(2, '0');
     function paint() {
       stat.dataset.s = state;
       stat.querySelector('.t').textContent = TXT[state];
-      stat.querySelector('small').textContent = (state === 'saved' && last) ? 'آخر حفظ ' + p2(last.getHours()) + ':' + p2(last.getMinutes()) : '';
+      stat.querySelector('small').textContent = (state === 'saved' && last) ? 'آخر حفظ ' + p2(last.getHours()) + ':' + p2(last.getMinutes()) : (state === 'error' ? String(errMsg).slice(0, 90) : '');
     }
     paint();
     window.addEventListener('mk:sync', e => {
-      state = (e.detail && e.detail.s) || state; clearTimeout(rt);
+      state = (e.detail && e.detail.s) || state; clearTimeout(rt); if (state === 'error') errMsg = (e.detail && e.detail.m) || '';
       if (state === 'saved') { last = new Date(); tries = 0; }
       if (state === 'error' && tries < 3) { tries++; rt = setTimeout(() => { if (state === 'error' && window.mkSyncNow) window.mkSyncNow(); }, 6000 * tries); }
       paint();
