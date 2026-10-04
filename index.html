@@ -2817,11 +2817,25 @@ window.resendSale = async function (id) {
 const ST_LBL = { new: 'جديد', preparing: 'جاري التجهيز', shipped: 'تم الشحن', delivered: 'تم التسليم', cancelled: 'ملغي', returned: 'مرتجع' };
 const stSel = x => '<div style="margin-top:6px"><select aria-label="حالة الطلب" onchange="setSaleStatus(\'' + esc(x.id) + '\',this.value)" style="font:inherit;font-size:13px;padding:4px 8px;border-radius:8px;border:1px solid #ccc">' +
   Object.keys(ST_LBL).map(k => '<option value="' + k + '"' + ((x.status || 'new') === k ? ' selected' : '') + '>' + ST_LBL[k] + '</option>').join('') + '</select></div>';
+async function notifyStatus(id, v) {
+  try {
+    const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { action: 'status', sale_id: id, status: v, test_event_code: getCfg().test || '', pixel_id: String((DATA.settings && DATA.settings.pixelId) || '').replace(/\D/g, '') || undefined } });
+    if (error) throw new Error(await edgeErr(error));
+    return data || { ok: false, error: 'رد فارغ' };
+  } catch (e) { console.warn(e); return { ok: false, error: String((e && e.message) || e).slice(0, 120) }; }
+}
 window.setSaleStatus = async function (id, v) {
   const { error } = await sb.from('sales').update({ status: v, status_at: new Date().toISOString() }).eq('id', id);
   if (error) { toast('تعذر تحديث الحالة. شغّل ملف SQL الخاص بالحالات في Supabase أولًا'); return renderSale(); }
   const s = SALES.find(x => x.id === id); if (s) s.status = v;
-  toast('تم تحديث الحالة ✓');
+  toast('تم تحديث الحالة ✓ — جاري إشعار ميتا والويب هوك…');
+  const r = await notifyStatus(id, v), parts = [];
+  if (r.error && r.meta === undefined) parts.push('تعذر الإشعار: ' + r.error);
+  else {
+    parts.push(!r.meta ? 'ميتا: لا حدث لهذه الحالة' : r.meta.ok ? 'ميتا ✓' : 'ميتا ✗ ' + (r.meta.error || ''));
+    parts.push(!r.webhook ? 'ويب هوك: غير مفعّل' : r.webhook.ok ? 'ويب هوك ✓' : 'ويب هوك ✗ ' + (r.webhook.error || ''));
+  }
+  toast('الحالة: ' + (ST_LBL[v] || v) + ' · ' + parts.join(' · '));
 };
 async function renderSale() {
   const c = getCfg();
@@ -3471,6 +3485,7 @@ async function cmsCreateOrder(order) {
     function render() {
       const n = ORD.length, show = isAdm() && n > 0;
       banner.style.display = show ? 'block' : 'none';
+      try { document.title = (show ? '(' + n + ') ' : '') + document.title.replace(/^\(\d+\)\s*/, ''); } catch (e) {}
       banner.textContent = '📩 ' + n + (n === 1 ? ' طلب جديد' : ' طلبات جديدة') + ' بانتظار التأكيد أو الإلغاء';
       const box = document.getElementById('ordList');
       box.innerHTML = n ? ORD.map((o, i) =>
@@ -3545,6 +3560,7 @@ async function cmsCreateOrder(order) {
         const { data, error } = await sb.from('leads').update({ status: 'cancelled' }).eq('ref', o.ref).select('ref');
         if (error || !data || !data.length) { no.disabled = false; return toast('تعذر الإلغاء' + (error && error.message ? ': ' + error.message : ' — صلاحية الجدول')); }
         ORD = ORD.filter(x => x.ref !== o.ref); render(); toast('تم إلغاء الطلب');
+        try { sb.functions.invoke('bright-task', { body: { action: 'lead_cancel', ref: o.ref, test_event_code: (typeof getCfg === 'function' && getCfg().test) || '', pixel_id: String((DATA.settings && DATA.settings.pixelId) || '').replace(/\D/g, '') || undefined } }).catch(() => {}); } catch (e) {}
       }
     });
 
