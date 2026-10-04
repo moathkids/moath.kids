@@ -3350,7 +3350,7 @@ async function cmsCreateOrder(order) {
           try { window.mkSyncNow(); } catch (e) {}
           for (let i = 0; i < 40 && state !== 'saved' && state !== 'error'; i++) await new Promise(r => setTimeout(r, 500));
         }
-        if (state !== 'saved' && !confirm('بعض التعديلات لم تُحفظ بعد. إذا خرجت الآن ستضيع. هل تريد الخروج؟')) return;
+        if (state !== 'saved' && state !== 'error' && !confirm('بعض التعديلات لم تُحفظ بعد. إذا خرجت الآن ستضيع. هل تريد الخروج؟')) return;
       }
       toggleAdmin(false);
     };
