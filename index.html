@@ -30,11 +30,12 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '945957301459601');
+    var _pid='2086766978646211';try{_pid=localStorage.getItem('mk_pixel_id')||_pid}catch(e){}
+    fbq('init', _pid);
     if(!/[?&]admin\b/.test(location.search))fbq('track','PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=945957301459601&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=2086766978646211&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
 
@@ -959,6 +960,7 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
                 <small>اترك السعر فارغًا لإخفاء المنطقة.</small>
             </div>
             <div class="field"><label for="s_hook">رابط أداة التتبع (Webhook، اختياري)</label><input type="text" id="s_hook" placeholder="https://..." autocapitalize="off"><small>يصله تفاصيل كل طلب (SKU، اللون، المقاس، الكمية) عند إرسال الزبون للطلب.</small></div>
+            <div class="field"><label for="s_pixel">رقم البكسل / Dataset ID (ميتا)</label><input type="text" id="s_pixel" inputmode="numeric" autocapitalize="off" placeholder="2086766978646211"><small>رقم البكسل الجديد. يُستخدم لإرسال المبيعات لميتا، وللبكسل في الموقع من الزيارة التالية.</small></div>
             <div class="field"><label for="s_dtime">مدة التوصيل</label><input type="text" id="s_dtime" placeholder="مثال: من 1 إلى 3 أيام عمل"></div>
             <div class="field"><label for="s_size">جدول المقاسات</label><textarea id="s_size" rows="5" placeholder="اكتب المقاسات وقياساتها سطرًا سطرًا"></textarea><small>يظهر زر "جدول المقاسات" في صفحة المنتج. اتركه فارغًا لإخفائه.</small></div>
             <hr class="sep">
@@ -2756,7 +2758,7 @@ async function edgeErr(error) {
 }
 async function sendToMeta(saleId, c) {
   try {
-    const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { sale_id: saleId, test_event_code: c.test || '' } });
+    const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { sale_id: saleId, test_event_code: c.test || '', pixel_id: String((DATA.settings && DATA.settings.pixelId) || '').replace(/\D/g, '') || undefined } });
     if (error) throw new Error(await edgeErr(error));
     if (data && data.ok) return { s: c.test ? 'unk' : 'ok' };
     return { s: 'err', msg: String((data && (data.error || data.message || data.detail)) || JSON.stringify(data || '')).slice(0, 160) };
@@ -3556,6 +3558,24 @@ async function cmsCreateOrder(order) {
 
     sync();
   } catch (err) { console.warn('orders alert skipped', err); }
+})();
+</script>
+
+<script>
+/* Meta Pixel ID: خانة بالإعدادات تُحفظ في القاعدة */
+(function () {
+  const NEWID = '2086766978646211';
+  const cache = id => { try { if (id) localStorage.setItem('mk_pixel_id', id); } catch (e) {} };
+  const _os = window.openSettings;
+  window.openSettings = function () { _os(); const f = document.getElementById('s_pixel'); if (f) f.value = (DATA.settings && DATA.settings.pixelId) || NEWID; };
+  const _ss = window.saveSettings;
+  window.saveSettings = async function () {
+    const f = document.getElementById('s_pixel'), v = f ? f.value.replace(/\D/g, '') : '';
+    await _ss();
+    if (f) { DATA.settings.pixelId = v; cache(v); persist(); }
+  };
+  const _as = window.applySettings;
+  window.applySettings = function () { _as(); cache(DATA.settings && DATA.settings.pixelId); };
 })();
 </script>
 </body>
