@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>معاذ كيدز</title>
+<style>body{font-family:Tajawal,Tahoma,system-ui,sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;text-align:center;background:#faf8f6;color:#222;padding:24px}a{display:inline-block;margin-top:16px;background:#111;color:#fff;text-decoration:none;padding:14px 28px;border-radius:14px;font-weight:700}</style>
+<script>
+/* رابط منتج جديد لم تُبنَ صفحته بعد (/p/<id>.html) ← نحوّله لعرض المنتج داخل المتجر.
+   نحافظ على ?fbclid وUTM حتى لا يضيع تتبع الإعلان. */
+(function(){
+  var m = location.pathname.match(/^(.*\/)p\/([0-9a-fA-F-]{36})(?:\.html)?\/?$/);
+  if (m) {
+    /* حماية من open redirect: المسار //evil.com/p/<id> كان يتحوّل إلى //evil.com/ */
+    var base = m[1].replace(/^\/+/, '/').replace(/[^\w\-.\/~%]/g, '');
+    if (base.charAt(0) === '/' && base.charAt(1) !== '/') location.replace(base + location.search + '#p/' + m[2]);
+  }
+})();
+</script></head>
+<body><main><h1>الصفحة غير موجودة</h1><p>ربما تغيّر الرابط أو لم يعد المنتج متوفرًا.</p><a href="./">العودة للمتجر</a></main>
+<script>
+/* في مشروع GitHub Pages: ./ نسبيًا يحتاج مسار المشروع */
+(function(){var a=document.querySelector('a');var seg=location.pathname.split('/').filter(Boolean);
+if(/github\.io$/.test(location.hostname)&&seg.length)a.href='/'+seg[0]+'/';else a.href='/';})();
+</script></body></html>
