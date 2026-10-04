@@ -2650,7 +2650,7 @@ document.body.insertAdjacentHTML('beforeend',
   '<div id="sl_lines" class="cart-note"></div>' +
   '<hr class="sep"><b>٢) بيانات الزبون</b>' +
   '<div class="field" style="margin-top:8px"><label for="sl_ph">رقم الهاتف</label><input type="tel" id="sl_ph" inputmode="tel" autocomplete="off" placeholder="0598123456 أو 972598123456" oninput="slQuality()" onchange="slLookup()"><small id="sl_known"></small></div>' +
-  '<div class="field"><label for="sl_nm">اسم الزبون (كامل)</label><input type="text" id="sl_nm" autocomplete="off" oninput="slQuality()"></div>' +
+  '<div class="field"><label for="sl_nm">اسم الزبون (اختياري)</label><input type="text" id="sl_nm" autocomplete="off" oninput="slQuality()"></div>' +
   '<div class="field"><label for="sl_em">الإيميل (اختياري، يرفع دقة المطابقة)</label><input type="email" id="sl_em" autocomplete="off" autocapitalize="off" oninput="slQuality()"></div>' +
   '<div class="row"><div class="field"><label for="sl_city">المدينة / المنطقة</label><input type="text" id="sl_city" autocomplete="off" oninput="slQuality()"></div>' +
   '<div class="field"><label for="sl_addr">العنوان (اختياري)</label><input type="text" id="sl_addr" autocomplete="off"></div></div>' +
@@ -2769,7 +2769,6 @@ window.sendSale = async function () {
   const lead = LEAD || LEADS.find(x => x.ref === ref) || null;
   if (!LINES.length) return toast('أضف صنفًا واحدًا على الأقل');
   if (ph.length < 10 || ph.length > 14) return toast('رقم الهاتف غير صحيح');
-  if (!name) return toast('اكتب اسم الزبون');
   if (!(val > 0)) return toast('اكتب المبلغ');
   if (email && !/\S+@\S+\.\S+/.test(email)) return toast('الإيميل غير صحيح');
   for (const l of LINES) {
