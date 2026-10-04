@@ -2575,19 +2575,12 @@ window.openPdp = function (id) {
 /* Moath Kids: تأكيد البيع المتكامل = زبون + مخزون + قاعدة البيانات + Meta Conversions API */
 (function () {
 document.querySelectorAll('[data-mk2]').forEach(n => n.remove());
-const PIXEL = '945957301459601';
-const TK = 'mk_capi_tok', TKL = 'mk_capi_tok_l', CK = 'mk_capi_cfg';
+const CK = 'mk_capi_cfg';
 const ls = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
-const getTok = () => { try { return sessionStorage.getItem(TK) || localStorage.getItem(TKL) || ''; } catch (e) { return ''; } };
 const getCfg = () => Object.assign({ test: '', cc: '972' }, ls.get(CK, {}));
-async function sha256(s) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-const hashed = async v => { v = String(v || '').trim().toLowerCase(); return v ? await sha256(v) : ''; };
 function normPhone(raw, cc) {
   let d = String(raw || '').replace(/[٠-٩]/g, x => '٠١٢٣٤٥٦٧٨٩'.indexOf(x)).replace(/\D/g, '');
   if (d.startsWith('00')) d = d.slice(2);
@@ -2656,10 +2649,8 @@ document.body.insertAdjacentHTML('beforeend',
   '<div class="modal-actions"><button type="button" class="btn green" id="sl_send" onclick="sendSale()">✅ تأكيد البيع</button><button type="button" class="btn" onclick="closeModal(\'saleModal\')">إغلاق</button></div>' +
   '<small style="display:block;margin-top:8px;color:#888">عند التأكيد: يُسجَّل البيع والزبون في قاعدة البيانات ← تنقص الكميات من المخزون ← يُرسل Purchase لميتا (الهاتف والاسم يُشفَّران قبل الإرسال).</small>' +
   '<hr class="sep"><details id="slCfg"><summary style="cursor:pointer;font-weight:700">⚙️ إعدادات ميتا</summary>' +
-  '<div class="field" style="margin-top:10px"><label for="sl_tok">توكن Conversions API</label><input type="password" id="sl_tok" autocomplete="off" autocapitalize="off" placeholder="EAA..." style="' + inp + '"><small>من Events Manager ← البكسل ← Settings ← Conversions API ← Generate access token. لا تشاركه مع أحد.</small></div>' +
   '<div class="row"><div class="field"><label for="sl_test">كود الاختبار (Test Events)</label><input type="text" id="sl_test" autocapitalize="characters" autocomplete="off" placeholder="TEST12345"><small>اتركه فارغًا عند الاستخدام الحقيقي.</small></div>' +
   '<div class="field"><label for="sl_cc">مفتاح الدولة</label><input type="text" id="sl_cc" inputmode="numeric" placeholder="972"><small>يُضاف للأرقام التي تبدأ بصفر.</small></div></div>' +
-  '<div class="field check"><input type="checkbox" id="sl_rem"> <label for="sl_rem" style="margin:0">تذكّر التوكن على هذا الجهاز (أقل أمانًا)</label></div>' +
   '<button type="button" class="btn primary" onclick="saveSaleCfg()">حفظ الإعدادات</button></details>' +
   '<hr class="sep"><b>ملخص ٣٠ يومًا</b><div id="sl_stats" class="cart-note"></div>' +
   '<hr class="sep"><b>آخر المبيعات</b><div id="saleLog" class="cart-note"></div></div></div>' +
@@ -2743,72 +2734,25 @@ async function saveCustomer(ph, name, city, addr, total, email) {
   if (error) throw error; return data.id;
 }
 
-/* ---------- ميتا ---------- */
-let EDGE = null;
-const CAPI_FN = 'bright-task'; /* اسم دالة Supabase المنشورة */
-async function edgeReady() {
-  if (EDGE === true) return true;
-  try {
-    const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { ping: true } });
-    if (!error) { EDGE = !!(data && data.ok); return EDGE; }
-    /* الدالة ترد 400 «customer required» فقط بعد نجاح فحص الأدمن ووجود توكن ميتا */
-    const r = error.context;
-    if (r && r.status === 400) { const j = await r.json().catch(() => ({})); EDGE = !!(j && j.error === 'customer required'); return EDGE; }
-  } catch (e) {}
-  return false;
-}
+/* ---------- ميتا: الإرسال يتم من الخادم فقط (دالة meta-capi)، والتوكن سرّي في Supabase ---------- */
+const CAPI_FN = 'bright-task';
 async function edgeErr(error) {
   try { const j = await error.context.json(); return String((j && j.error) || error.message || 'فشل'); }
   catch (e) { return String((error && error.message) || 'فشل'); }
 }
-function edgeBody(s, c) {
-  const parts = String(s.customer_name || '').trim().split(/\s+/);
-  return {
-    order_id: String(s.ref || s.id),
-    value: Number(s.total),
-    customer: { phone: s.customer_phone, first_name: parts[0] || '', last_name: parts.slice(1).join(' '),
-      city: String(s.city || '').replace(/[\s\p{P}]/gu, ''), email: s.email || '' },
-    fbp: s.fbp || '', fbc: s.fbc || '', client_user_agent: s.ua || '',
-    event_source_url: s.source_url || (location.origin + location.pathname),
-    test_event_code: c.test || ''
-  };
-}
-async function postMeta(ev, tok, c, sale) {
-  if (sale && await edgeReady()) {
-    try {
-      const { data, error } = await sb.functions.invoke(CAPI_FN, { body: edgeBody(sale, c) });
-      if (error) throw new Error(await edgeErr(error));
-      if (data && data.ok) return { s: 'ok', n: c.test ? 'وصل (اختبار)' : 'وصل لميتا' };
-      if (!tok) return { s: 'err', n: String((data && data.error) || 'فشل').slice(0, 140) };
-    } catch (e) { if (!tok) return { s: 'err', n: String((e && e.message) || e).slice(0, 140) }; }
-  }
-  const body = new URLSearchParams(); body.set('data', JSON.stringify([ev])); body.set('access_token', tok); if (c.test) body.set('test_event_code', c.test);
-  let r, j = {};
-  try { r = await fetch('https://graph.facebook.com/' + PIXEL + '/events', { method: 'POST', body }); j = await r.json().catch(() => ({})); } catch (e) { r = null; }
-  if (!r) return { s: 'unk', n: 'أُرسل لكن المتصفح لم يؤكد الاستلام. تحقق من Test Events.' };
-  if (r.ok && j.events_received >= 1) return { s: 'ok', n: c.test ? 'وصل (اختبار)' : 'وصل لميتا' };
-  return { s: 'err', n: (j.error && j.error.message) ? String(j.error.message).slice(0, 140) : ('فشل: ' + r.status) };
-}
-async function sendMeta(s, tok, c) {
-  const ph = s.customer_phone, parts = String(s.customer_name || '').trim().split(/\s+/), fn = parts[0] || '', ln = parts.slice(1).join(' ');
-  const ud = { ph: [await sha256(ph)], external_id: [await sha256(ph)] };
-  const hfn = await hashed(fn), hln = await hashed(ln), hct = await hashed(String(s.city || '').replace(/[\s\p{P}]/gu, ''));
-  if (hfn) ud.fn = [hfn]; if (hln) ud.ln = [hln]; if (hct) ud.ct = [hct];
-  if (s.email) { const he = await hashed(s.email); if (he) ud.em = [he]; }
-  if (s.fbc) ud.fbc = s.fbc; if (s.fbp) ud.fbp = s.fbp; if (s.ua) ud.client_user_agent = s.ua;
-  const items = s.items || [], now = Math.floor(Date.now() / 1000);
-  let t = Math.floor(new Date(s.created_at).getTime() / 1000); if (!t || now - t > 6 * 86400) t = now;
-  const ev = { event_name: 'Purchase', event_time: t, event_id: 'sale-' + s.id, action_source: 'chat', user_data: ud,
-    custom_data: { value: Number(s.total), currency: 'ILS', content_type: 'product', content_ids: items.map(x => x.pid),
-      contents: items.map(x => ({ id: x.pid, quantity: x.qty, item_price: x.price })), num_items: items.reduce((a, x) => a + x.qty, 0), order_id: s.ref || s.id } };
-  if (s.source_url) ev.event_source_url = s.source_url;
-  return await postMeta(ev, tok, c, s);
+async function sendToMeta(saleId, c) {
+  try {
+    const { data, error } = await sb.functions.invoke(CAPI_FN, { body: { sale_id: saleId, test_event_code: c.test || '' } });
+    if (error) throw new Error(await edgeErr(error));
+    if (data && data.ok) return { s: c.test ? 'unk' : 'ok' };
+    return { s: 'err' };
+  } catch (e) { console.warn(e); return { s: 'err' }; }
 }
 
-/* ---------- التأكيد ---------- */
+/* ---------- التأكيد: دالة واحدة في القاعدة تسجّل البيع والزبون وتنقص المخزون معًا ---------- */
 window.sendSale = async function () {
   if (BUSY) return;
-  const c = getCfg(), tok = getTok(), ph = normPhone($('sl_ph').value, c.cc), name = $('sl_nm').value.trim(),
+  const c = getCfg(), ph = normPhone($('sl_ph').value, c.cc), name = $('sl_nm').value.trim(),
     city = $('sl_city').value.trim(), addr = $('sl_addr').value.trim(), ref = $('sl_ref').value.trim(), val = parseFloat($('sl_val').value), email = $('sl_em').value.trim().toLowerCase();
   const lead = LEAD || LEADS.find(x => x.ref === ref) || null;
   if (!LINES.length) return toast('أضف صنفًا واحدًا على الأقل');
@@ -2816,7 +2760,6 @@ window.sendSale = async function () {
   if (!name) return toast('اكتب اسم الزبون');
   if (!(val > 0)) return toast('اكتب المبلغ');
   if (email && !/\S+@\S+\.\S+/.test(email)) return toast('الإيميل غير صحيح');
-  if (!(window.crypto && crypto.subtle)) return toast('الموقع يحتاج اتصالًا آمنًا (https)');
   for (const l of LINES) {
     const p = DATA.products.find(x => x.id === l.pid);
     if (!p) return toast('«' + l.name + '» لم يعد موجودًا');
@@ -2824,44 +2767,35 @@ window.sendSale = async function () {
   }
   const sum = LINES.map(l => '• ' + l.name + (l.color ? ' ' + l.color : '') + (l.size ? ' ' + l.size : '') + ' × ' + l.qty).join('\n');
   if (!confirm('تأكيد البيع؟\n\n' + sum + '\n\nالزبون: ' + name + ' (' + ph + ')\nالمبلغ: ' + cur() + fmt(val) + '\n\nسيتم تسجيل الزبون وإنقاص المخزون وإرسال الشراء لميتا.')) return;
-  const edge = await edgeReady();
-  if (!tok && !edge && !confirm('لا يوجد توكن ميتا. سيُسجَّل البيع وتنقص الكميات بدون إرسال لميتا (تستطيع إرساله لاحقًا من «آخر المبيعات»). متابعة؟')) return;
   BUSY = true; const btn = $('sl_send'); btn.disabled = true;
   try {
     if (ref) {
       const { data: dup } = await sb.from('sales').select('id').eq('ref', ref).limit(1);
       if (dup && dup.length && !confirm('رقم الطلب هذا مُسجَّل قبل ذلك. تسجيله مرة ثانية؟')) { BUSY = false; btn.disabled = false; return; }
     }
-    // 1) حفظ البيع أولًا: إن فشل لا يتغير أي شيء
-    const row = { customer_name: name, customer_phone: ph, email, city, address: addr, ref: ref || null, total: val, meta_status: 'pending',
-      fbc: lead ? lead.fbc || '' : '', fbp: lead ? lead.fbp || '' : '', ua: lead ? lead.ua || '' : '', source_url: lead ? lead.source_url || '' : '',
-      items: LINES.map(l => ({ pid: l.pid, code: l.code, name: l.name, color: l.color, size: l.size, qty: l.qty, price: l.price })) };
-    const { data: ins, error } = await sb.from('sales').insert(row).select('id,created_at').single();
+    // 1) تسجيل البيع + الزبون + المخزون في عملية واحدة (إن فشلت لا يتغير شيء)
+    const { data, error } = await sb.rpc('confirm_sale', {
+      p_name: name, p_phone: ph, p_city: city, p_address: addr, p_email: email,
+      p_items: LINES.map(l => ({ pid: l.pid, color: l.color, size: l.size, qty: l.qty })),
+      p_total: val, p_ref: ref || null,
+      p_fbp: lead ? lead.fbp || null : null, p_fbc: lead ? lead.fbc || null : null,
+      p_ua: lead ? lead.ua || null : null, p_source_url: lead ? lead.source_url || null : null
+    });
     if (error) throw error;
-    const sale = Object.assign({}, row, ins);
-    // 2) الزبون
-    let warn = '';
-    try { const cid = await saveCustomer(ph, name, city, addr, val, email); await sb.from('sales').update({ customer_id: cid }).eq('id', sale.id); }
-    catch (e) { warn = ' (تعذر تحديث ملف الزبون)'; console.warn(e); }
-    if (lead) { try { await sb.from('leads').update({ status: 'sold' }).eq('ref', lead.ref); } catch (e) {} }
-    // 3) المخزون
+    const saleId = data && data.sale_id; if (!saleId) throw new Error('لم يرجع رقم البيع');
+    // 2) مرآة المخزون في الواجهة (القاعدة نقصت فعلًا)
     LINES.forEach(l => { const p = DATA.products.find(x => x.id === l.pid); if (p && p.track) changeStock(l.pid, l.key, -l.qty); });
-    // 4) ميتا
-    let m = { s: 'pending', n: 'لم يُرسل (لا يوجد توكن)' };
-    if (tok || edge) m = await sendMeta(sale, tok, c);
-    await sb.from('sales').update({ meta_status: m.s, meta_note: m.n }).eq('id', sale.id);
+    // 3) ميتا (من الخادم)
+    const m = await sendToMeta(saleId, c);
     LINES = []; LEAD = null; renderLines(); ['sl_ph', 'sl_nm', 'sl_em', 'sl_city', 'sl_addr', 'sl_ref'].forEach(i => $(i).value = ''); $('sl_known').textContent = '';
     slFilter(); await loadLeads(); slQuality(); await renderSale();
-    toast(m.s === 'ok' ? 'تم البيع ✓ ووصل لميتا' + warn : m.s === 'unk' ? 'تم البيع (ميتا غير مؤكد)' + warn : m.s === 'err' ? 'تم البيع لكن فشل إرسال ميتا' + warn : 'تم البيع ✓' + warn);
+    toast(m.s === 'ok' ? 'تم البيع ✓ ووصل لميتا' : m.s === 'unk' ? 'تم البيع ✓ ووصل لميتا (اختبار)' : 'تم البيع ✓ لكن فشل إرسال ميتا، اضغط «إرسال لميتا» من آخر المبيعات');
   } catch (e) { console.error(e); toast('تعذر حفظ البيع، لم يتغير شيء: ' + (e.message || e)); }
   BUSY = false; btn.disabled = false;
 };
 window.resendSale = async function (id) {
-  const s = SALES.find(x => x.id === id), tok = getTok();
-  if (!s) return; if (!tok && !(await edgeReady())) { $('slCfg').open = true; return toast('ضع التوكن أولًا'); }
-  const m = await sendMeta(s, tok, getCfg());
-  await sb.from('sales').update({ meta_status: m.s, meta_note: m.n }).eq('id', id);
-  await renderSale(); toast(m.s === 'ok' ? 'وصل لميتا ✓' : m.s === 'unk' ? 'أُرسل (غير مؤكد)' : 'فشل الإرسال');
+  const m = await sendToMeta(id, getCfg());
+  await renderSale(); toast(m.s === 'ok' ? 'وصل لميتا ✓' : m.s === 'unk' ? 'وصل (اختبار)' : 'فشل الإرسال، راجع آخر المبيعات');
 };
 
 /* ---------- العرض ---------- */
@@ -2875,11 +2809,9 @@ window.setSaleStatus = async function (id, v) {
   toast('تم تحديث الحالة ✓');
 };
 async function renderSale() {
-  const c = getCfg(), edge = await edgeReady(), has = !!getTok() || edge;
+  const c = getCfg();
   $('sl_test').value = c.test; $('sl_cc').value = c.cc;
-  try { $('sl_rem').checked = !!localStorage.getItem(TKL); } catch (e) {}
-  $('saleWarn').innerHTML = (edge ? '<div class="cart-note" style="margin-bottom:10px">🔒 إرسال ميتا يتم عبر الخادم، والتوكن غير محفوظ على هذا الجهاز.</div>' : '') + (!has ? '<div class="unsaved" style="display:block;margin-bottom:10px">ضع توكن ميتا من «إعدادات ميتا» ليُرسل الشراء تلقائيًا.</div>' : '') +
-    (c.test ? '<div class="unsaved" style="display:block;margin-bottom:10px">🧪 وضع الاختبار: الأحداث تظهر في Test Events فقط ولا تُحسب في الإعلانات. امسح كود الاختبار عند الاستخدام الحقيقي.</div>' : '');
+  $('saleWarn').innerHTML = (c.test ? '<div class="unsaved" style="display:block;margin-bottom:10px">🧪 وضع الاختبار: الأحداث تظهر في Test Events فقط ولا تُحسب في الإعلانات. امسح كود الاختبار عند الاستخدام الحقيقي.</div>' : '');
   let L = [];
   try { const { data, error } = await sb.from('sales').select('*').order('created_at', { ascending: false }).limit(15); if (error) throw error; L = data || []; SALES = L; }
   catch (e) { $('saleLog').innerHTML = 'تعذر تحميل المبيعات. تأكد من تشغيل ملف SQL في Supabase.'; return; }
@@ -2892,11 +2824,8 @@ async function renderSale() {
 }
 window.openSale = function () { LINES = []; LEAD = null; ['sl_q', 'sl_ph', 'sl_nm', 'sl_em', 'sl_city', 'sl_addr', 'sl_ref'].forEach(i => $(i).value = ''); $('sl_known').textContent = ''; slFilter(); renderLines(); renderSale(); loadLeads().then(slQuality); loadStats(); openModal('saleModal'); };
 window.saveSaleCfg = function () {
-  const t = $('sl_tok').value.trim(), rem = $('sl_rem').checked;
-  if (t) { try { sessionStorage.setItem(TK, t); if (rem) localStorage.setItem(TKL, t); } catch (e) {} }
-  if (!rem) { try { localStorage.removeItem(TKL); } catch (e) {} }
   ls.set(CK, { test: $('sl_test').value.trim(), cc: $('sl_cc').value.replace(/\D/g, '') || '972' });
-  $('sl_tok').value = ''; renderSale(); toast('تم حفظ الإعدادات');
+  renderSale(); toast('تم حفظ الإعدادات');
 };
 
 /* ---------- شاشة الزبائن ---------- */
