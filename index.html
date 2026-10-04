@@ -1758,11 +1758,13 @@ body.admin #adminBar.ab2{flex-direction:column;flex-wrap:nowrap;align-items:stre
         try { CART = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) { CART = []; }
         function saveCart() { try { localStorage.setItem(CART_KEY, JSON.stringify(CART)); } catch (e) {} updateCartBadge(); }
         function cleanCart() {
+            if (!window.MK_FRESH) return; /* لا نحذف شيئًا من العربة قبل أن تصل قائمة المنتجات الحقيقية من الإنترنت */
             CART = CART.filter(c => { const p = DATA.products.find(x => x.id === c.id); if (!p || soldOut(p) || c.qty <= 0) return false; if (p.track) { const q = qtyOf(p, c.color || '', c.size || ''); if (q <= 0) return false; c.qty = Math.min(c.qty, q); } return true; });
         }
         function cartItems() {
             cleanCart();
-            return CART.map(c => ({ c, p: DATA.products.find(x => x.id === c.id) }));
+            const L = CART.map(c => ({ c, p: DATA.products.find(x => x.id === c.id) }));
+            return L.some(x => !x.p) ? [] : L; /* المنتجات لم تُحمَّل بعد: نعرض العربة فارغة مؤقتًا دون مسح المحفوظ */
         }
         function updateCartBadge() {
             cleanCart();
@@ -3156,9 +3158,10 @@ async function cmsCreateOrder(order) {
     try {
       const d = await cmsLoadStore();
       DATA = d; DATA.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings); DATA.stubs = {};
-      takeSnap(); window.MK_READY = true;
+      takeSnap(); window.MK_READY = true; window.MK_FRESH = true;
       const same = usedCache && prev === JSON.stringify({ s: DATA.settings, p: DATA.products });
       if (!same) { redraw(); }
+      try { updateCartBadge(); if (typeof refreshCart === 'function') refreshCart(); } catch (e) {}
       if (!usedCache || (/^#p\//.test(location.hash) && $('pdp').hidden)) { try { route(); } catch (e) {} }
       if (!IS_ADM) { try { localStorage.setItem(CK_CAT, JSON.stringify({ t: Date.now(), d: { settings: DATA.settings, products: DATA.products } })); } catch (e) { try { localStorage.removeItem(CK_CAT); } catch (x) {} } }
     } catch (e) { window.MK_READY = true; const m = (e && (e.message || e.details || e.code)) || String(e); console.warn('Supabase load failed: ' + m + ' | ' + JSON.stringify(e)); toast('تعذر تحميل المنتجات: ' + String(m).slice(0, 90)); }
