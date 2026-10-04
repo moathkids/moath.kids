@@ -2612,6 +2612,7 @@ window.slLead = function () {
     LINES.push({ pid: p.id, code: p.code || '', name: p.name, color: i.color || '', size: i.size || '', qty: i.qty, price: Number(i.price) || Number(p.price) || 0, key: ik(i.color || '', i.size || '') });
   });
   $('sl_ref').value = l.ref; if (l.name) $('sl_nm').value = l.name; if (l.region) $('sl_city').value = l.region;
+  if (l.meta) { if (l.meta.phone_typed && !$('sl_ph').value) $('sl_ph').value = l.meta.phone_typed; if (l.meta.address_typed && !$('sl_addr').value) $('sl_addr').value = l.meta.address_typed; }
   renderLines(); if (l.total > 0 && !miss) $('sl_val').value = l.total;
   if (miss) toast('بعض أصناف الطلب لم تعد موجودة، أضفها يدويًا');
   slQuality();
@@ -3294,11 +3295,26 @@ async function cmsCreateOrder(order) {
     try {
       const o = e.detail || {}; if (!o.ref || typeof sb === 'undefined') return;
       const C = (typeof window.mkCust === 'function') ? window.mkCust() : {};
-      sb.from('leads').upsert({
-        ref: o.ref, fbp: cookie('_fbp'), fbc: getFbc(), ua: navigator.userAgent.slice(0, 400),
+      const q = new URLSearchParams(location.search), ua = navigator.userAgent || '';
+      const meta = {
+        device: /iPhone|iPad|iPod/i.test(ua) ? 'iPhone/iPad' : /Android/i.test(ua) ? 'Android' : 'كمبيوتر',
+        lang: navigator.language || '', tz: (function () { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return ''; } })(),
+        screen: (screen.width || 0) + 'x' + (screen.height || 0),
+        referrer: (document.referrer || '').slice(0, 300),
+        utm_source: q.get('utm_source') || '', utm_medium: q.get('utm_medium') || '', utm_campaign: q.get('utm_campaign') || '',
+        fbclid: q.get('fbclid') || '', phone_typed: C.phone || '', address_typed: C.address || '', note_typed: C.note || '',
+        sent_at: new Date().toISOString()
+      };
+      const row = {
+        ref: o.ref, fbp: cookie('_fbp'), fbc: getFbc(), ua: ua.slice(0, 400),
         source_url: location.href.split('#')[0].slice(0, 500), items: o.items || [], total: o.total || 0,
         name: C.name || '', region: C.region || '', status: 'new'
-      }, { onConflict: 'ref', ignoreDuplicates: true }).then(r => { if (r && r.error) console.warn('lead log failed', r.error); });
+      };
+      const opt = { onConflict: 'ref', ignoreDuplicates: true };
+      // نحاول الحفظ مع المعلومات الإضافية، وإن لم يوجد العمود نحفظ الطلب بدونها حتى لا يضيع
+      sb.from('leads').upsert(Object.assign({ meta: meta }, row), opt).then(r => {
+        if (r && r.error) sb.from('leads').upsert(row, opt).then(r2 => { if (r2 && r2.error) console.warn('lead log failed', r2.error); });
+      });
     } catch (x) {}
   });
 })();
@@ -3456,6 +3472,7 @@ async function cmsCreateOrder(order) {
       box.innerHTML = n ? ORD.map((o, i) =>
         '<div style="padding:10px 0;border-bottom:1px solid #eee"><b>' + esc(o.ref) + '</b> · ' + new Date(o.created_at).toLocaleString('ar-EG') +
         ((o.name || o.region) ? '<br>' + esc(o.name || '') + (o.region ? ' · ' + esc(o.region) : '') : '') +
+        (o.meta ? '<br><small style="color:#777">' + [o.meta.device, o.meta.utm_campaign || o.meta.utm_source, o.meta.referrer && o.meta.referrer.replace(/^https?:\/\//, '').split('/')[0], o.meta.fbclid ? 'من إعلان فيسبوك' : ''].filter(Boolean).map(esc).join(' · ') + '</small>' : '') +
         '<br><small>' + (o.items || []).map(x => esc(x.name) + (x.color ? ' ' + esc(x.color) : '') + (x.size ? ' ' + esc(x.size) : '') + ' ×' + (x.qty || 1)).join('، ') + '</small>' +
         '<br><b>' + esc(cur()) + fmt(o.total || 0) + '</b>' +
         '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn green" style="flex:2;min-height:44px" data-ok="' + i + '">✅ تأكيد</button>' +
