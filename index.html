@@ -1143,7 +1143,7 @@ function openCart() { renderCart(); openModal('cartModal'); const it = cartItems
 function openModal(id) { $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeModal(id) { $(id).classList.remove('open'); if (!document.querySelector('.modal-bg.open')) document.body.style.overflow = ''; }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
-</script>
+
 
 
 /* ---------- الإدارة ---------- */
