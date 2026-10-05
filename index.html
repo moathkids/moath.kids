@@ -1148,13 +1148,29 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add
 
 /* ---------- الإدارة ---------- */
 async function toggleAdmin(on) {
-  document.body.classList.toggle('admin', on);
-  if (on) window.scrollTo(0, 0);
-  else {
-    try { await sb.auth.signOut(); } catch (e) {}
-    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+  if (on) {
+    document.body.classList.add('admin');
+    window.scrollTo(0, 0);
+  } else {
+    try {
+      await sb.auth.signOut();
+    } catch (e) {
+      console.warn('signOut error', e);
+    }
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(k => {
+        if (k.startsWith('sb-') || k.includes('supabase') || k === 'moathkids_store_v2') {
+          localStorage.removeItem(k);
+        }
+      });
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn('storage error', e);
+    }
     ST.admin = false;
-    setTimeout(() => location.reload(), 300);
+    document.body.classList.remove('admin');
+    setTimeout(() => location.replace(location.pathname), 500);
   }
 }
 
