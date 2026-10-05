@@ -1569,6 +1569,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-/i;
 
 /* ---------- Supabase: حفظ الإعدادات ---------- */
 async function saveSettingsToDb(s) {
+  if (s.logo && s.logo.startsWith('data:')) {
+    console.warn('logo is still data: URL, uploading...');
+    s.logo = await uploadImage(s.logo, 'brand');
+  }
+  if (s.cover && s.cover.startsWith('data:')) {
+    console.warn('cover is still data: URL, uploading...');
+    s.cover = await uploadImage(s.cover, 'brand');
+  }
   const extra = {}; Object.keys(s).forEach(k => { if (['pixelId', 'siteUrl'].includes(k) || k.startsWith('_')) extra[k] = s[k]; });
   const { error } = await sb.rpc('admin_save_settings', { p_settings: {
     name: s.name, phone: s.phone, currency: s.currency, logo: s.logo, cover: s.cover,
