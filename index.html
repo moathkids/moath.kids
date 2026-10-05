@@ -1929,13 +1929,12 @@ async function boot() {
     DATA.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings);
     DATA.products = d.products;
     applySettings(); renderCats(); renderProducts(); updateCartBadge();
-    await startAdmin();
-    setInterval(() => { if (ST.admin) loadLeads(); }, 45000);
   } catch (e) {
     toast('تعذر تحميل المنتجات — تأكد من الإعدادات');
     applySettings(); renderCats(); renderProducts();
-
   }
+  await startAdmin();
+  setInterval(() => { if (ST.admin) loadLeads(); }, 45000);
 }
 boot();
 
