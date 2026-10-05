@@ -1147,9 +1147,10 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add
 
 
 /* ---------- الإدارة ---------- */
-function toggleAdmin(on) {
+async function toggleAdmin(on) {
   document.body.classList.toggle('admin', on);
   if (on) window.scrollTo(0, 0);
+  else { try { await sb.auth.signOut(); } catch (e) {} ST.admin = false; }
 }
 
 /* ---------- ضغط الصور ---------- */
