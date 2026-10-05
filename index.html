@@ -1660,14 +1660,19 @@ async function startAdmin() {
 
 async function submitLogin() {
   const em = $('login_em').value.trim(), pw = $('login_pw').value;
-  if (!em || !pw) return toast('اكتب الإيميل وكلمة السر');
-  const { error } = await sb.auth.signInWithPassword({ email: em, password: pw });
-  if (error) return toast('بيانات الدخول غير صحيحة');
-  const { data: adm } = await sb.from('admins').select('user_id').maybeSingle();
-  if (!adm) { await sb.auth.signOut(); return toast('هذا الحساب ليس أدمن'); }
-  ST.admin = true;
-  closeModal('loginModal');
-  toggleAdmin(true);
+  if (!em || !pw) { alert('اكتب الإيميل وكلمة السر'); return; }
+  alert('URL: ' + sb.supabaseUrl);
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email: em, password: pw });
+    if (error) { alert('فشل: ' + (error.message || 'غير معروف') + '\nالحالة: ' + (error.status || '')); return; }
+    const { data: adm } = await sb.from('admins').select('user_id').maybeSingle();
+    if (!adm) { await sb.auth.signOut(); alert('ليس أدمن'); return; }
+    ST.admin = true;
+    closeModal('loginModal');
+    toggleAdmin(true);
+  } catch (e) {
+    alert('استثناء: ' + (e.message || e));
+  }
 }
 
 /* ---------- تم البيع ---------- */
