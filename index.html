@@ -1597,22 +1597,33 @@ async function syncNow() {
     markUnsaved(true);
     for (const p of DATA.products) {
       if (p._synced === JSON.stringify(p)) continue;
-      p.image = await uploadImage(p.image, 'products');
-      p.thumb = await uploadImage(p.thumb, 'thumbs');
-      for (const v of (p.variants || [])) {
-        v.image = await uploadImage(v.image, 'products');
-        v.thumb = await uploadImage(v.thumb, 'thumbs');
-      }
-      const newId = await saveProductToDb(p);
-      if (newId && newId !== p.id) { const old = p.id; p.id = newId; delete selectedSizes[old]; }
-      p._synced = JSON.stringify(p);
+      try {
+        if (p.image && p.image.startsWith('data:')) p.image = await uploadImage(p.image, 'products');
+        if (p.thumb && p.thumb.startsWith('data:')) p.thumb = await uploadImage(p.thumb, 'thumbs');
+        for (const v of (p.variants || [])) {
+          if (v.image && v.image.startsWith('data:')) v.image = await uploadImage(v.image, 'products');
+          if (v.thumb && v.thumb.startsWith('data:')) v.thumb = await uploadImage(v.thumb, 'thumbs');
+        }
+        const newId = await saveProductToDb(p);
+        if (newId && newId !== p.id) { const old = p.id; p.id = newId; delete selectedSizes[old]; }
+        p._synced = JSON.stringify(p);
+      } catch (e) { console.warn('product sync failed', e); }
     }
     const s = DATA.settings;
+    if (s.logo && s.logo.startsWith('data:')) {
+      try { s.logo = await uploadImage(s.logo, 'brand'); } catch (e) { console.warn(e); }
+    }
+    if (s.cover && s.cover.startsWith('data:')) {
+      try { s.cover = await uploadImage(s.cover, 'brand'); } catch (e) { console.warn(e); }
+    }
     if (s._synced !== JSON.stringify({ ...s, _synced: undefined })) {
-      s.logo = await uploadImage(s.logo, 'brand');
-      s.cover = await uploadImage(s.cover, 'brand');
-      await saveSettingsToDb(s);
-      s._synced = JSON.stringify({ ...s, _synced: undefined });
+      try {
+        await saveSettingsToDb(s);
+        s._synced = JSON.stringify({ ...s, _synced: undefined });
+      } catch (e) {
+        console.warn('settings sync failed', e);
+        toast('فشل حفظ الإعدادات: ' + (e.message || e));
+      }
     }
     markUnsaved(false);
     toast('تم الحفظ في قاعدة البيانات ✓');
@@ -1624,6 +1635,8 @@ async function syncNow() {
     if (ST.again) { ST.again = false; syncNow(); }
   }
 }
+
+
 
 /* ---------- الإدارة: بدء ---------- */
 async function startAdmin() {
