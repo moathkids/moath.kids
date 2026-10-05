@@ -1200,10 +1200,12 @@ async function pickImage(input, max, kind) {
   if (!input.files[0]) return;
   try {
     const data = await readImage(input.files[0], max);
-    if (kind === 'product') { pendingImage = data; pendingThumb = await makeThumb(data); $('f_imgurl').value = ''; setPreview(data); }
-    else if (kind === 'logo') { pendingLogo = data; toast('تم اختيار الشعار. اضغط حفظ الإعدادات.'); }
-    else { pendingCover = data; toast('تم اختيار صورة الغلاف. اضغط حفظ الإعدادات.'); }
-  } catch (e) { toast('تعذر قراءة الصورة'); }
+    toast('جاري رفع الصورة...');
+    const url = await uploadImage(data, kind === 'logo' ? 'brand' : kind === 'cover' ? 'brand' : 'products');
+    if (kind === 'product') { pendingImage = url; pendingThumb = await uploadImage(await makeThumb(data), 'thumbs'); $('f_imgurl').value = ''; setPreview(url); }
+    else if (kind === 'logo') { pendingLogo = url; toast('تم رفع الشعار. اضغط حفظ الإعدادات.'); }
+    else { pendingCover = url; toast('تم رفع الغلاف. اضغط حفظ الإعدادات.'); }
+  } catch (e) { console.error(e); toast('تعذر رفع الصورة: ' + (e.message || e)); }
 }
 function setPreview(src) {
   const pv = $('f_preview');
