@@ -1150,7 +1150,12 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add
 async function toggleAdmin(on) {
   document.body.classList.toggle('admin', on);
   if (on) window.scrollTo(0, 0);
-  else { try { await sb.auth.signOut(); } catch (e) {} ST.admin = false; }
+  else {
+    try { await sb.auth.signOut(); } catch (e) {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+    ST.admin = false;
+    setTimeout(() => location.reload(), 300);
+  }
 }
 
 /* ---------- ضغط الصور ---------- */
