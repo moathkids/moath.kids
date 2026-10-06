@@ -830,14 +830,17 @@ updateWaLinks();
 
 function renderDelivery() {
   const s = DATA.settings;
-  const list = (s.delivery || []).filter(d => d.name && d.price !== '' && d.price != null && !isNaN(d.price));
+  const list = (s.delivery || []).filter(d => d.name && d.price !== '' && d.price != null);
   $('delivery').hidden = !list.length;
   $('deliverySub').textContent = list.length ? 'التوصيل متاح إلى: ' + list.map(d => d.name).join('، ') + (s.deliveryTime ? '. مدة التوصيل: ' + s.deliveryTime : '') : '';
-  $('deliveryGrid').innerHTML = list.map(d =>
-    '<div class="dcard"><i>🚚</i><div class="dname">' + esc(d.name) + '</div>' +
-    '<div class="dprice">' + esc(s.currency) + fmt(d.price) + '</div><div class="dnote">سعر التوصيل</div></div>').join('');
+  $('deliveryGrid').innerHTML = list.map(d => {
+    const num = parseFloat(d.price);
+    const display = isNaN(num) ? esc(d.price) : esc(s.currency) + fmt(num);
+    const note = isNaN(num) ? '' : '<div class="dnote">سعر التوصيل</div>';
+    return '<div class="dcard"><i>🚚</i><div class="dname">' + esc(d.name) + '</div>' +
+      '<div class="dprice">' + display + '</div>' + note + '</div>';
+  }).join('');
 }
-
 /* ---------- الألوان ---------- */
 function variantsOf(p) { return (p.variants || []).filter(v => v && v.color); }
 function colorOptions(p) {
