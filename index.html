@@ -1775,13 +1775,25 @@ window.slLead = function () {
   if (!LEAD) return slQuality();
   const l = LEAD; LINES = []; let miss = 0;
   (l.items || []).forEach(i => {
-    const p = DATA.products.find(x => x.id === i.pid) || DATA.products.find(x => i.code && String(x.code) === String(i.code));
+    const p = DATA.products.find(x => x.id === i.pid) 
+           || DATA.products.find(x => i.code && String(x.code) === String(i.code));
     if (!p) { miss++; return; }
-    LINES.push({ pid: p.id, code: p.code || '', name: p.name, color: String(i.color || '').slice(0, 60), size: String(i.size || '').slice(0, 40), qty: Math.max(1, Math.min(99, parseInt(i.qty, 10) || 1)), price: Number(p.price) || 0, key: ik(String(i.color || ''), String(i.size || '')) });
+    LINES.push({ 
+      pid: p.id, code: p.code || '', name: p.name, 
+      color: String(i.color || '').slice(0, 60), 
+      size: String(i.size || '').slice(0, 40), 
+      qty: Math.max(1, Math.min(99, parseInt(i.qty, 10) || 1)), 
+      price: Number(i.price) || Number(p.price) || 0, 
+      key: ik(String(i.color || ''), String(i.size || '')) 
+    });
   });
-  $('sl_ref').value = l.ref;
-  if (l.name && !$('sl_nm').value) $('sl_nm').value = l.name;
-  if (l.region && !$('sl_city').value) $('sl_city').value = l.region;
+  $('sl_ref').value = l.ref || '';
+  if (l.name) $('sl_nm').value = l.name;
+  if (l.region) $('sl_city').value = l.region;
+  if (l.phone) $('sl_ph').value = l.phone;
+  if (l.email) $('sl_em').value = l.email;
+  if (l.address) $('sl_addr').value = l.address;
+  if (l.total) $('sl_val').value = l.total;
   renderLines();
   if (miss) toast('بعض الأصناف لم تعد موجودة');
   slQuality();
