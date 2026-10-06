@@ -813,7 +813,7 @@ function applySettings() {
     const el = $(id);
     if (s.logo) { el.src = s.logo; el.style.display = d; } else { el.removeAttribute('src'); el.style.display = 'none'; }
   });
-  ['waTop', 'waHero', 'waBand', 'waFloat', 'waFoot'].forEach(id => $(id).href = waLink('مرحباً، عندي استفسار'));
+updateWaLinks();
   const soc = [['instagram', 'انستغرام'], ['facebook', 'فيسبوك'], ['tiktok', 'تيك توك']]
     .map(([k, l]) => [k, socialUrl(k, s[k]), l]).filter(x => x[1]);
   $('footSocial').innerHTML = soc.map(([k, u, l]) =>
