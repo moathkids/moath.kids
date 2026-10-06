@@ -1360,6 +1360,7 @@ function openProductForm(id) {
   $('f_old').value = p && p.oldPrice ? p.oldPrice : '';
   $('f_cost').value = p && p.cost ? p.cost : '';
   $('f_desc').value = p ? p.desc || '' : '';
+  $('f_gender').value = p ? (p.gender || '') : '';
   $('f_file').value = '';
   const isData = p && p.image && p.image.startsWith('data:');
   $('f_imgurl').value = p && p.image && !isData ? p.image : '';
