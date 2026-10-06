@@ -1592,7 +1592,7 @@ async function loadStore() {
       return {
         id: pr.id, created: pr.created_at || '', code: pr.code || '', name: pr.name, price: Number(pr.price),
         oldPrice: pr.old_price == null ? null : Number(pr.old_price),
-        category: pr.category || '', desc: pr.description || '',
+        category: pr.category || '', gender: pr.gender || '', desc: pr.description || '',
         image: pr.image_url || '', thumb: pr.thumb_url || pr.image_url || '',
         color: first.name, colorGender: first.gender, sizes, avail, track: true, inv,
         variants: cols.slice(1).map(c => ({ color: c.name, image: c.image || '', thumb: c.thumb || '', gender: c.gender || '' }))
