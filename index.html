@@ -2036,8 +2036,8 @@ document.addEventListener('click', e => {
     ref, total: cartTotal(items),
     items: items.map(x => ({ pid: x.p.id, code: x.p.code || '', name: x.p.name, color: x.c.color || x.p.color || '', size: x.c.size || '', qty: x.c.qty, price: x.p.price })),
     name: C.name || '',
-    };
     phone: C.phone || '', region: C.region || ''
+      };
   window.dispatchEvent(new CustomEvent('mk:order', { detail: order }));
 // Lead event removed — يُرسل فقط عند تأكيد البيع
   setTimeout(() => { try { sessionStorage.removeItem('mk_ref'); } catch (x) {} }, 500);
