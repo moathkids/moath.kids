@@ -1990,6 +1990,7 @@ window.addEventListener('mk:order', async e => {
     const row = {
       ref: o.ref, items: o.items || [], total: o.total || 0,
       name: (typeof mkCust === 'function' ? mkCust().name : '') || '',
+      phone: (typeof mkCust === 'function' ? mkCust().phone : '') || '',
       region: (typeof mkCust === 'function' ? mkCust().region : '') || '',
       ua: ua.slice(0, 400), source_url: location.href.split('#')[0].slice(0, 500),
       fbp: cookie('_fbp'), fbc: getFbc(), meta
