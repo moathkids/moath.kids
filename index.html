@@ -1187,8 +1187,10 @@ function renderCart() {
   h += '<div class="cart-total"><span>المجموع</span><span>' + esc(cur) + fmt(cartTotal(items)) + '</span></div>';
   h += '<div class="cart-note">' + (dl.length ? 'التوصيل: ' + dl.map(d => esc(d.name) + ' ' + esc(cur) + fmt(d.price)).join(' · ') + '. ' : '') + 'اطلب مباشرة عبر الواتساب.</div>';
   const cu = mkCust(), fs = 'width:100%;padding:10px;border:1px solid #ddd;font:inherit;font-size:14px;margin-top:8px;background:#fff';
-  h += '<div class="cart-cust"><input type="text" id="cu_name" autocomplete="name" maxlength="60" placeholder="اسمك (اختياري)" value="' + esc(cu.name || '') + '" style="' + fs + '">' +
-       (dl.length ? '<select id="cu_region" style="' + fs + '"><option value="">المنطقة (اختياري)</option>' + dl.map(d => '<option' + (cu.region === d.name ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select>' : '') + '</div>';
+  h += '<div class="cart-cust">' +
+     '<input type="tel" id="cu_phone" inputmode="tel" maxlength="15" placeholder="رقم واتساب (اختياري)" value="' + esc(cu.phone || '') + '" style="' + fs + '">' +
+     '<input type="text" id="cu_name" autocomplete="name" maxlength="60" placeholder="اسمك (اختياري)" value="' + esc(cu.name || '') + '" style="' + fs + '">' +
+     (dl.length ? '<select id="cu_region" style="' + fs + '"><option value="">المنطقة (اختياري)</option>' + dl.map(d => '<option' + (cu.region === d.name ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select>' : '') + '</div>';
   h += '<div class="cart-actions"><a class="btn green" data-send href="' + esc(waLink(cartMessage(items, true))) + '" target="_blank" rel="noopener">إرسال الطلب عبر الواتساب</a>' +
        '<button type="button" class="btn" onclick="clearCart()">تفريغ العربة</button></div>';
   box.innerHTML = h;
