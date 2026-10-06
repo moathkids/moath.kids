@@ -1090,7 +1090,7 @@ document.addEventListener('keydown', e => {
 })();
 
 /* ---------- السلة ---------- */
-function saveCart() { try { localStorage.setItem(CART_KEY, JSON.stringify(CART)); } catch (e) {} updateCartBadge(); }
+function saveCart() { try { localStorage.setItem(CART_KEY, JSON.stringify(CART)); } catch (e) {} updateCartBadge(); try { updateWaLinks(); } catch (e) {} }
 function cartItems() { return CART.map(c => ({ c, p: DATA.products.find(x => x.id === c.id) })).filter(x => x.p); }
 function updateCartBadge() {
   const n = CART.reduce((a, c) => a + c.qty, 0);
