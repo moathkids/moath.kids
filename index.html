@@ -533,7 +533,15 @@ body.admin .noadm{display:none}
       <div class="field"><label for="f_price">السعر</label><input type="number" id="f_price" min="0" step="any" inputmode="decimal"></div>
       <div class="field"><label for="f_old">السعر قبل الخصم</label><input type="number" id="f_old" min="0" step="any" inputmode="decimal"></div>
     </div>
-    <div class="field"><label for="f_cost">سعر التكلفة (للإدارة)</label><input type="number" id="f_cost" min="0" step="any" inputmode="decimal"></div>
+    <div class="field"><label for="f_cost">سعر التكلفة (للإدارة)</label><input type="number" id="f_cost" min="0" step="any" inputmode="decimal"></div> 
+    <div class="field">
+  <label for="f_gender">فئة المنتج</label>
+  <select id="f_gender" style="width:100%;padding:10px;border:1px solid #ddd;font-size:15px;font-family:inherit;background:#fff">
+    <option value="">محايد (يظهر للذكر والأنثى)</option>
+    <option value="ذكر">ذكر فقط</option>
+    <option value="أنثى">أنثى فقط</option>
+  </select>
+</div>
     <div class="field">
       <label for="f_file">صورة المنتج الرئيسية</label>
       <input type="file" id="f_file" accept="image/*" onchange="pickImage(this, 900, 'product')">
