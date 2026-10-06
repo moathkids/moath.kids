@@ -762,7 +762,20 @@ const DEFAULT_SETTINGS = {
 
 function waLink(msg) {
   return 'https://wa.me/' + String(DATA.settings.phone || '').replace(/\D/g, '') + (msg ? '?text=' + encodeURIComponent(msg) : '');
+} 
+
+  function updateWaLinks() {
+  const items = cartItems();
+  let msg = 'مرحباً، عندي استفسار';
+  if (items.length) {
+    msg = cartMessage(items, true);
+  }
+  ['waTop', 'waHero', 'waBand', 'waFloat', 'waFoot'].forEach(id => {
+    const el = $(id);
+    if (el) el.href = waLink(msg);
+  });
 }
+
 function socialUrl(kind, v) {
   v = (v || '').trim(); if (!v) return '';
   if (/^https?:\/\//i.test(v)) return v;
