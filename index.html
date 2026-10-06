@@ -2029,7 +2029,7 @@ document.addEventListener('click', e => {
     name: C.name || '', region: C.region || ''
   };
   window.dispatchEvent(new CustomEvent('mk:order', { detail: order }));
-  track('Lead', { content_ids: items.map(x => x.p.id), value: cartTotal(items), currency: 'ILS', num_items: items.reduce((a, x) => a + x.c.qty, 0) });
+// Lead event removed — يُرسل فقط عند تأكيد البيع
   setTimeout(() => { try { sessionStorage.removeItem('mk_ref'); } catch (x) {} }, 500);
 });
 
