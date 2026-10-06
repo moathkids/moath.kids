@@ -1414,6 +1414,7 @@ function saveProduct() {
   const item = {
     id, code, name, price, avail,
     oldPrice: isNaN(old) ? null : old,
+    gender: $('f_gender').value || '',
     category: '',
     cost: Math.max(0, parseFloat($('f_cost').value) || 0),
     sizes,
@@ -1425,7 +1426,7 @@ function saveProduct() {
     track: true,
     inv
   };
-
+r
   const i = DATA.products.findIndex(x => x.id === id);
   if (i >= 0) DATA.products[i] = item; else DATA.products.unshift(item);
 
