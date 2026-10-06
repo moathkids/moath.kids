@@ -1631,7 +1631,7 @@ async function saveProductToDb(p) {
   const { data, error } = await sb.rpc('admin_save_product', { p_product: {
     id: UUID_RE.test(p.id) ? p.id : null,
     code: p.code, name: p.name, price: p.price, oldPrice: p.oldPrice == null ? '' : p.oldPrice,
-    category: p.category || '', desc: p.desc || '', image: p.image || '', thumb: p.thumb || '',
+    category: p.category || '', gender: p.gender || '', desc: p.desc || '', image: p.image || '', thumb: p.thumb || '',
     isPublished: true, cost: p.cost || 0, colors
   } });
   if (error) throw error;
