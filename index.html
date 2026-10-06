@@ -1470,7 +1470,7 @@ async function saveSettings() {
   s.facebook = $('s_fb').value.trim();
   s.tiktok = $('s_tt').value.trim();
   const names = [...document.querySelectorAll('.d-name')], prices = [...document.querySelectorAll('.d-price')];
-  s.delivery = names.map((n, i) => ({ name: n.value.trim(), price: prices[i].value === '' ? '' : parseFloat(prices[i].value) }));
+s.delivery = names.map((n, i) => ({ name: n.value.trim(), price: (prices[i].value || '').trim() }));
   if (pendingLogo !== null) s.logo = pendingLogo;
   if (pendingCover !== null) s.cover = pendingCover;
   persist(); closeModal('settingsModal'); applySettings(); renderProducts(); toast('تم حفظ الإعدادات');
