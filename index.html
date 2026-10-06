@@ -1166,6 +1166,7 @@ function cartMessage(items, withLinks) {
   msg += '\n\nالمجموع: ' + cur + fmt(cartTotal(items)) + ' (بدون التوصيل)';
   const cu = mkCust();
   if (cu.name) msg += '\nالاسم: ' + cu.name;
+  if (cu.phone) msg += '\nرقم الهاتف: ' + cu.phone;
   if (cu.region) msg += '\nالمنطقة: ' + cu.region;
   return msg;
 }
