@@ -2007,7 +2007,10 @@ try {
 /* ---------- حفظ السلة مع الطلب ---------- */
 const CK = 'mk_cust';
 function refreshSendLink() { const a = document.querySelector('#cartBody [data-send]'); if (a) a.href = waLink(cartMessage(cartItems(), true)); }
-$('cartBody').addEventListener('input', e => { if (e.target.id === 'cu_name') { mkCustSet('name', e.target.value.trim().slice(0, 60)); refreshSendLink(); } });
+$('cartBody').addEventListener('input', e => {
+  if (e.target.id === 'cu_name') { mkCustSet('name', e.target.value.trim().slice(0, 60)); refreshSendLink(); }
+  if (e.target.id === 'cu_phone') { mkCustSet('phone', e.target.value.replace(/\D/g, '').slice(0, 15)); refreshSendLink(); }
+});
 $('cartBody').addEventListener('change', e => { if (e.target.id === 'cu_region') { mkCustSet('region', e.target.value); refreshSendLink(); } });
 function mkCust() { try { return JSON.parse(localStorage.getItem(CK) || '{}'); } catch (e) { return {}; } }
 function mkCustSet(k, v) { const c = mkCust(); c[k] = v; try { localStorage.setItem(CK, JSON.stringify(c)); } catch (e) {} }
