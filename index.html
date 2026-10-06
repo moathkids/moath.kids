@@ -111,8 +111,9 @@ img{max-width:100%;height:auto;display:block}
 
 /* ===== شبكة المنتجات ===== */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:28px 6px}
-.card{background:transparent;border:0;display:flex;flex-direction:column;position:relative;transition:transform .2s}
-.card:hover{transform:translateY(-3px)}
+.card{background:#fff;border-radius:12px;overflow:hidden;padding:8px 8px 12px;display:flex;flex-direction:column;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:box-shadow .3s ease,transform .3s ease}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.08)}
+
 .card .ph-wrap{aspect-ratio:3/4;background:#f4f4f4;overflow:hidden;position:relative;cursor:zoom-in}
 .card img.product-img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s}
 .card img.product-img.ld{opacity:1}
