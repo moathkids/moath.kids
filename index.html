@@ -1447,12 +1447,11 @@ function openSettings() {
   $('s_ig').value = s.instagram; $('s_fb').value = s.facebook; $('s_tt').value = s.tiktok;
   $('s_logo').value = ''; $('s_cover').value = ''; $('s_dtime').value = s.deliveryTime || ''; $('s_size').value = s.sizeGuide || '';
   $('pagesFields').innerHTML = pageRowsHtml(s.pages || []);
-  $('deliveryFields').innerHTML = (s.delivery || []).map((d, i) =>
+$('deliveryFields').innerHTML = (s.delivery || []).map((d, i) =>
     '<div class="row" style="margin-bottom:8px"><input type="text" class="d-name" value="' + esc(d.name) + '" placeholder="المنطقة" style="flex:1;padding:10px;border:1px solid #ddd;font-family:inherit">' +
-    '<input type="number" class="d-price" min="0" step="any" value="' + esc(d.price) + '" placeholder="السعر" style="width:100px;padding:10px;border:1px solid #ddd;font-family:inherit"></div>').join('');
+    '<input type="text" class="d-price" value="' + esc(d.price) + '" placeholder="السعر أو ملاحظة" style="flex:1;padding:10px;border:1px solid #ddd;font-family:inherit"></div>').join('');
   openModal('settingsModal');
 }
-
 async function saveSettings() {
   const phone = $('s_phone').value.replace(/\D/g, '');
   if (!phone) return toast('اكتب رقم الواتساب');
