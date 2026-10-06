@@ -943,6 +943,7 @@ function gView() { return GSET.includes(activeCat) ? activeCat : ''; }
 function hasTags(p) { return GSET.includes(p.colorGender) || variantsOf(p).some(v => GSET.includes(v.gender)); }
 function gOk(gen, g) { return !g || !GSET.includes(gen) || gen === g; }
 function inGender(p, g) {
+  if (p.gender === 'ذكر' || p.gender === 'أنثى') return p.gender === g;
   if (hasTags(p)) return !!(p.image && gOk(p.colorGender, g)) || variantsOf(p).some(v => gOk(v.gender, g));
   return !p.category || p.category === g;
 }
