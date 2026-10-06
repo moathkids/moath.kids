@@ -1881,7 +1881,29 @@ window.slAdd = function () {
   $('sl_n').value = 1; renderLines();
 };
 
-window.sendSale = async function () {
+window.cancelLead = async function () {
+  const ref = $('sl_ref').value.trim();
+  if (!ref) return toast('اختر طلباً أولاً');
+  if (!confirm('إلغاء الطلب «' + ref + '»؟\n\nسيختفي من قائمة الطلبات الجديدة.')) return;
+  try {
+    const { error } = await sb.rpc('cancel_lead', { p_ref: ref });
+    if (error) throw error;
+    toast('تم إلغاء الطلب ✓');
+    LEAD = null;
+    await loadLeads();
+    renderSale();
+    $('sl_ref').value = '';
+    $('sl_nm').value = '';
+    $('sl_ph').value = '';
+    $('sl_city').value = '';
+    LINES = []; renderLines();
+  } catch (e) {
+    console.error(e);
+    toast('تعذّر الإلغاء: ' + (e.message || e));
+  }
+};
+
+  window.sendSale = async function () {
   if (ST.busy) return;
   const ph = $('sl_ph').value.replace(/\D/g, ''), name = $('sl_nm').value.trim(),
     city = $('sl_city').value.trim(), addr = $('sl_addr').value.trim(), ref = $('sl_ref').value.trim(),
