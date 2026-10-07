@@ -1389,7 +1389,8 @@ function saveProduct() {
   const cols = [], names = new Set();
   for (let i = 0; i < formColors.length; i++) {
     const c = formColors[i], cn = c.name.trim();
-    if (!cn && (formColors.length > 1 || c.image)) return toast('اكتب اسم اللون ' + (i + 1));
+  if (!cn && !c.image) continue;
+    if (!cn) return toast('اكتب اسم اللون ' + (i + 1));
     if (names.has(cn.toLowerCase())) return toast('اللون «' + cn + '» مكرر');
     names.add(cn.toLowerCase());
     const label = cn || 'المنتج', seen = new Set(), sizes = [];
