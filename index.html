@@ -1105,9 +1105,7 @@ function renderColorRows() {
     '<div class="ccard" data-ci="' + ci + '">' +
     '<div class="chead"><b>اللون ' + (ci + 1) + '</b><span class="ctot">' + colorTotal(c) + ' قطعة</span>' +
     (formColors.length > 1 ? '<button type="button" class="btn danger" data-act="delcolor">حذف</button>' : '') + '</div>' +
-    '<div class="crow"><input type="text" data-f="name" value="' + esc(c.name) + '" placeholder="اسم اللون (وردي، أزرق...)">' +
-    '<select data-f="gender" style="' + sel + '">' +
-    [['', 'محايد'], ['ذكر', 'ذكر'], ['أنثى', 'أنثى']].map(g => '<option value="' + g[0] + '"' + (c.gender === g[0] ? ' selected' : '') + '>' + g[1] + '</option>').join('') + '</select></div>' +
+    '<div class="crow"><input type="text" data-f="name" value="' + esc(c.name) + '" placeholder="اسم اللون (وردي، أزرق...)"></div>' +
     (ci === 0
       ? '<small style="display:block;margin:-2px 0 8px;color:#888">صورة هذا اللون هي «صورة المنتج الرئيسية» أعلاه.</small>'
       : '<div class="cimg"><div class="vthumb">' + (c.image ? '<img src="' + esc(c.image) + '" alt="">' : '📷') + '</div><div style="flex:1;min-width:0"><input type="file" accept="image/*" data-f="img" style="font-size:13px;max-width:100%"><small style="color:#888">صورة هذا اللون (اختيارية)</small></div></div>') +
@@ -1132,8 +1130,7 @@ function initColorRows() {
   box.addEventListener('change', async e => {
     const t = e.target, x = ctx(t); if (!x) return;
     const c = formColors[x.ci];
-    if (t.dataset.f === 'gender') c.gender = t.value;
-    else if (t.dataset.f === 'img' && t.files[0]) {
+    if (t.dataset.f === 'img' && t.files[0]) {
       try { const d = await readImage(t.files[0], 900); c.image = d; c.thumb = await makeThumb(d); renderColorRows(); }
       catch (err) { toast('تعذر قراءة الصورة'); }
     }
@@ -1217,7 +1214,7 @@ function saveProduct() {
       seen.add(sz); sizes.push({ size: sz, qty: q });
     }
     if (!sizes.length) return toast('أضف مقاسًا للون «' + label + '»');
-    cols.push({ name: cn, gender: c.gender || '', image: c.image || '', thumb: c.thumb || c.image || '', sizes });
+    cols.push({ name: cn, gender: '', image: c.image || '', thumb: c.thumb || c.image || '', sizes });
   }
   if (!cols.some(c => c.sizes.some(s => s.qty > 0))) return toast('اكتب عدد القطع لمقاس واحد على الأقل');
 
@@ -1415,8 +1412,8 @@ async function loadStore() {
         oldPrice: pr.old_price == null ? null : Number(pr.old_price),
         category: pr.category || '', gender: pr.gender || '', desc: pr.description || '',
         image: pr.image_url || '', thumb: pr.thumb_url || pr.image_url || '',
-        color: first.name, colorGender: first.gender, sizes, avail, track: true, inv,
-        variants: cols.slice(1).map(c => ({ color: c.name, image: c.image || '', thumb: c.thumb || '', gender: c.gender || '' }))
+        color: first.name, colorGender: '', sizes, avail, track: true, inv,
+        variants: cols.slice(1).map(c => ({ color: c.name, image: c.image || '', thumb: c.thumb || '', gender: '' }))
       };
     });
     return { settings, products };
