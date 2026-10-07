@@ -1,0 +1,188 @@
+<!-- شريط الإدارة -->
+<div class="admin-bar admin-only" id="adminBar">
+  <button class="btn primary" onclick="openProductForm()">+ إضافة منتج</button>
+  <button class="btn" onclick="openInv()">📦 المخزون</button>
+  <button class="btn green" onclick="openSale()">💰 تم البيع</button>
+  <button class="btn" onclick="openCust()">👥 الزبائن</button>
+  <button class="btn" onclick="openSettings()">⚙️ الإعدادات</button>
+  <span class="unsaved" id="unsavedTag" style="display:none">⏳ جاري الحفظ…</span>
+  <button class="btn" onclick="toggleAdmin(false)">خروج</button>
+</div>
+
+<!-- الطلبات الجديدة -->
+<button type="button" id="ordersBanner" style="display:none;position:sticky;top:var(--ab,0px);z-index:59;width:100%;background:#c8102e;color:#fff;border:0;padding:12px;font-weight:500;font-size:15px;cursor:pointer;font-family:inherit"></button>
+<!--SPLIT-->
+<!-- نافذة منتج (إدارة) -->
+<div class="modal-bg" id="productModal">
+  <div class="modal">
+    <h3 id="formTitle">إضافة منتج</h3>
+    <input type="hidden" id="f_id">
+    <div class="row">
+      <div class="field" style="flex:2">
+        <label for="f_name">اسم الصنف</label>
+        <input type="text" id="f_name" placeholder="مثال: سالوبيت صوف بأذان أرنب">
+      </div>
+      <div class="field">
+        <label for="f_code">الرقم</label>
+        <input type="text" id="f_code" inputmode="numeric" placeholder="101">
+      </div>
+    </div>
+    <div class="field">
+      <label for="f_desc">الوصف</label>
+      <textarea id="f_desc" rows="2"></textarea>
+    </div>
+    <div class="row">
+      <div class="field"><label for="f_price">السعر</label><input type="number" id="f_price" min="0" step="any" inputmode="decimal"></div>
+      <div class="field"><label for="f_old">السعر قبل الخصم</label><input type="number" id="f_old" min="0" step="any" inputmode="decimal"></div>
+    </div>
+    <div class="field"><label for="f_cost">سعر التكلفة (للإدارة)</label><input type="number" id="f_cost" min="0" step="any" inputmode="decimal"></div> 
+    <div class="field">
+  <label for="f_gender">فئة المنتج</label>
+  <select id="f_gender" style="width:100%;padding:10px;border:1px solid #ddd;font-size:15px;font-family:inherit;background:#fff">
+    <option value="">محايد (يظهر للذكر والأنثى)</option>
+    <option value="ذكر">ذكر فقط</option>
+    <option value="أنثى">أنثى فقط</option>
+  </select>
+</div>
+    <div class="field">
+      <label for="f_file">صورة المنتج الرئيسية</label>
+      <input type="file" id="f_file" accept="image/*" onchange="pickImage(this, 900, 'product')">
+      <img class="preview" id="f_preview" alt="" style="display:none;width:100%;max-height:200px;object-fit:contain;margin-top:8px;background:#f4f4f4">
+      <small>أو الصق رابط صورة:</small>
+      <input type="text" id="f_imgurl" placeholder="https://..." oninput="setPreview(this.value)">
+    </div>
+    <div class="field">
+      <label>الألوان والمقاسات وعدد القطع</label>
+      <div id="colorRows"></div>
+      <button type="button" class="btn" style="margin-top:4px" onclick="addColor()">+ إضافة لون</button>
+      <small>لكل لون: اكتب اسمه ثم مقاساته وعدد القطع.</small>
+    </div>
+    <datalist id="sizeHints">
+      <option value="3 شهور"><option value="6 شهور"><option value="9 شهور">
+      <option value="12 شهر"><option value="سنة"><option value="سنتين">
+      <option value="3 سنوات"><option value="4 سنوات"><option value="5 سنوات">
+      <option value="6 سنوات"><option value="7 سنوات"><option value="8 سنوات">
+    </datalist>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="saveProduct()">حفظ المنتج</button>
+      <button class="btn" onclick="cancelProductForm()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة المخزون -->
+<div class="modal-bg" id="invModal">
+  <div class="modal" style="max-width:560px">
+    <h3>📦 إدارة المخزون</h3>
+    <div class="field"><input type="text" id="inv_q" placeholder="🔎 ابحث باسم المنتج" oninput="renderInv()"></div>
+    <div id="invList"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn green" onclick="exportStockCsv()">⬇️ تصدير CSV</button>
+      <button type="button" class="btn" onclick="closeModal('invModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الإعدادات -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <h3>إعدادات المتجر</h3>
+    <div class="field"><label for="s_name">اسم المتجر</label><input type="text" id="s_name"></div>
+    <div class="field"><label for="s_title">عنوان الغلاف</label><input type="text" id="s_title"></div>
+    <div class="field"><label for="s_tag">عبارة تحت العنوان</label><input type="text" id="s_tag"></div>
+    <div class="field"><label for="s_announce">الشريط العلوي</label><input type="text" id="s_announce"></div>
+    <div class="field"><label for="s_phone">رقم الواتساب</label><input type="tel" id="s_phone" placeholder="972598904686" inputmode="numeric"><small>بالصيغة الدولية بدون +</small></div>
+    <div class="field"><label for="s_addr">العنوان</label><input type="text" id="s_addr" placeholder="فلسطين - طولكرم - فرعون"></div>
+    <div class="field"><label for="s_cur">العملة</label><input type="text" id="s_cur" placeholder="₪"></div>
+    <div class="field"><label for="s_dtime">مدة التوصيل</label><input type="text" id="s_dtime" placeholder="من 1 إلى 3 أيام"></div>
+    <div class="field"><label for="s_size">جدول المقاسات</label><textarea id="s_size" rows="4"></textarea></div>
+    <hr class="sep">
+    <div class="field"><label>أسعار التوصيل</label><div id="deliveryFields"></div></div>
+    <hr class="sep">
+    <div class="field"><label>صفحات المتجر</label><div id="pagesFields"></div><button type="button" class="btn" onclick="addPageRow()">+ إضافة صفحة</button></div>
+    <hr class="sep">
+    <div class="field"><label for="s_logo">الشعار</label><input type="file" id="s_logo" accept="image/*" onchange="pickImage(this, 300, 'logo')"></div>
+    <div class="field"><label for="s_cover">صورة الغلاف</label><input type="file" id="s_cover" accept="image/*" onchange="pickImage(this, 1000, 'cover')"></div>
+    <hr class="sep">
+    <div class="field"><label for="s_ig">انستغرام</label><input type="text" id="s_ig"></div>
+    <div class="field"><label for="s_fb">فيسبوك</label><input type="text" id="s_fb"></div>
+    <div class="field"><label for="s_tt">تيك توك</label><input type="text" id="s_tt"></div>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="saveSettings()">حفظ الإعدادات</button>
+      <button class="btn" onclick="closeModal('settingsModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة تم البيع -->
+<div class="modal-bg" id="saleModal">
+  <div class="modal" style="max-width:560px">
+    <h3>💰 تأكيد بيع</h3>
+    <div class="field">
+      <label for="sl_lead">📩 الطلبات الواردة</label>
+      <select id="sl_lead" onchange="slLead()" style="width:100%;padding:10px 12px;border:1px solid #ddd;font-family:inherit;font-size:16px"></select>
+    </div>
+    <b>1) الأصناف</b>
+    <div class="field" style="margin-top:8px"><input type="text" id="sl_q" placeholder="ابحث عن منتج" oninput="slFilter()"></div>
+    <div class="field"><select id="sl_p" onchange="slProd()" style="width:100%;padding:10px 12px;border:1px solid #ddd;font-family:inherit;font-size:16px"></select></div>
+    <div class="row">
+      <div class="field"><select id="sl_c" onchange="slColor()" style="width:100%;padding:10px;border:1px solid #ddd;font-family:inherit"></select></div>
+      <div class="field"><select id="sl_z" style="width:100%;padding:10px;border:1px solid #ddd;font-family:inherit"></select></div>
+      <div class="field" style="max-width:80px"><input type="number" id="sl_n" min="1" value="1" inputmode="numeric" style="width:100%;padding:10px;border:1px solid #ddd;font-family:inherit"></div>
+    </div>
+    <button type="button" class="btn" onclick="slAdd()">+ إضافة الصنف</button>
+    <div id="sl_lines" class="cart-note"></div>
+    <hr class="sep">
+    <b>2) بيانات الزبون</b>
+    <div class="field" style="margin-top:8px"><label for="sl_ph">رقم الهاتف</label><input type="tel" id="sl_ph" inputmode="tel" placeholder="0598123456" oninput="slQuality()"><small id="sl_known"></small></div>
+    <div class="field"><label for="sl_nm">اسم الزبون</label><input type="text" id="sl_nm" oninput="slQuality()"></div>
+    <div class="field"><label for="sl_em">الإيميل (اختياري)</label><input type="email" id="sl_em" oninput="slQuality()"></div>
+    <div class="row">
+      <div class="field"><label for="sl_city">المدينة</label><input type="text" id="sl_city" oninput="slQuality()"></div>
+      <div class="field"><label for="sl_addr">العنوان</label><input type="text" id="sl_addr"></div>
+    </div>
+    <hr class="sep">
+    <b>3) المبلغ</b>
+    <div class="row" style="margin-top:8px">
+      <div class="field"><label for="sl_val">المبلغ النهائي</label><input type="number" id="sl_val" min="0" step="any"></div>
+      <div class="field"><label for="sl_ref">رقم الطلب</label><input type="text" id="sl_ref" placeholder="MK-..."></div>
+    </div>
+    <div id="sl_qual" class="cart-note"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn green" id="sl_send" onclick="sendSale()">✅ تأكيد البيع</button>
+      <button type="button" class="btn danger" id="sl_cancel" onclick="cancelLead()">❌ إلغاء الطلب</button>
+      <button type="button" class="btn" onclick="closeModal('saleModal')">إغلاق</button>
+    </div>
+    <small style="display:block;margin-top:8px;color:#888">عند التأكيد: يُسجَّل البيع والزبون ← ينقص المخزون ← يُرسل Purchase لميتا.</small>
+    <hr class="sep">
+    <b>ملخص 30 يومًا</b><div id="sl_stats" class="cart-note"></div>
+    <hr class="sep">
+    <b>آخر المبيعات</b><div id="saleLog" class="cart-note"></div>
+  </div>
+</div>
+
+<!-- نافذة الزبائن -->
+<div class="modal-bg" id="custModal">
+  <div class="modal" style="max-width:560px">
+    <h3>👥 الزبائن</h3>
+    <div class="field"><input type="text" id="cu_q" placeholder="ابحث بالاسم أو الهاتف" oninput="renderCust()"></div>
+    <div id="cu_list" class="cart-note"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" onclick="exportCust()">⬇️ تصدير CSV</button>
+      <button type="button" class="btn" onclick="closeModal('custModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الدخول -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal" style="max-width:360px">
+    <h3>🔒 دخول الإدارة</h3>
+    <div class="field"><label for="login_em">الإيميل</label><input type="email" id="login_em" autocomplete="username" autocapitalize="off"></div>
+    <div class="field"><label for="login_pw">كلمة السر</label><input type="password" id="login_pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitLogin()"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn primary" onclick="submitLogin()">دخول</button>
+      <button type="button" class="btn" onclick="closeModal('loginModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
