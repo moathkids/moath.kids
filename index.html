@@ -1377,9 +1377,7 @@ function openProductForm(id) {
 }
 
 function saveProduct() {
-  function saveProduct() {
-  try {
-    toast('1: بدء');
+  
   const name = $('f_name').value.trim(), code = $('f_code').value.trim(), price = parseFloat($('f_price').value);
   const existingId = $('f_id').value.trim();
   if (!name) return toast('اكتب اسم المنتج');
