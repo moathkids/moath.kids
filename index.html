@@ -543,6 +543,39 @@ const SUPABASE_KEY = 'sb_publishable_8ndTsC3I_gcB7CAFqFEJDg_3tUnJUtc';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const BUCKET = 'product-images';
 
+/* ---------- تعيين كلمة سر جديدة (رابط الإيميل) ---------- */
+function showRecoveryModal() {
+  if (document.getElementById('recoveryModal')) return;
+  const m = document.createElement('div');
+  m.className = 'modal-bg open'; m.id = 'recoveryModal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+  m.innerHTML = '<div class="modal"><h3>🔑 كلمة سر جديدة</h3>' +
+    '<div class="field"><label for="rc_pw">كلمة السر الجديدة (8 أحرف على الأقل)</label><input type="password" id="rc_pw" autocomplete="new-password"></div>' +
+    '<div class="field"><label for="rc_pw2">أعد كتابتها</label><input type="password" id="rc_pw2" autocomplete="new-password" onkeydown="if(event.key===\'Enter\')saveNewPassword()"></div>' +
+    '<div class="row"><button type="button" class="btn primary" id="rc_btn" onclick="saveNewPassword()">حفظ</button></div></div>';
+  document.body.appendChild(m);
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const i = document.getElementById('rc_pw'); if (i) i.focus(); }, 60);
+}
+async function saveNewPassword() {
+  const pw = document.getElementById('rc_pw').value, pw2 = document.getElementById('rc_pw2').value;
+  if (pw.length < 8) { alert('كلمة السر لازم تكون 8 أحرف على الأقل'); return; }
+  if (pw !== pw2) { alert('كلمتا السر غير متطابقتين'); return; }
+  const btn = document.getElementById('rc_btn'); btn.disabled = true;
+  try {
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) { alert('فشل: ' + (error.message || 'غير معروف')); btn.disabled = false; return; }
+    await sb.auth.signOut();
+    alert('تم تغيير كلمة السر ✅ سجّل دخولك الآن بالكلمة الجديدة.');
+    location.replace(location.origin + location.pathname + '?admin');
+  } catch (e) {
+    alert('استثناء: ' + (e.message || e)); btn.disabled = false;
+  }
+}
+sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') showRecoveryModal(); });
+if (/error_code=otp_expired|error=access_denied/.test(location.hash)) {
+  setTimeout(() => { try { alert('انتهت صلاحية الرابط أو استُخدم من قبل. اطلب رابطًا جديدًا.'); history.replaceState(null, '', location.pathname); } catch (e) {} }, 800);
+}
+
 /* ---------- الحالة ---------- */
 let DATA = JSON.parse(document.getElementById('store-data').textContent);
 let CURP = null;
