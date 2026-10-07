@@ -2283,6 +2283,23 @@ document.addEventListener('keydown', function (e) {
   const open = document.querySelectorAll('.modal-bg.open');
   if (open.length) closeModal(open[open.length - 1].id);
 });
+ /* ===== تصدير الدوال لـ returns.js ===== */
+window.sizeOk = sizeOk;
+window.qtyOf = qtyOf;
+window.colorsOf = colorsOf;
+window.sizesList = sizesList;
+window.colorOptions = colorOptions;
+window.renderProducts = renderProducts;
+window.renderHero = renderHero;
+window.isUnsaved = isUnsaved;
+window.flushSync = flushSync;
+window.persist = persist;
+window.reload = reload;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.toast = toast;
+window.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
+ 
 boot();
 
 </script>
