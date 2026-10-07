@@ -643,7 +643,7 @@ if (/error_code=otp_expired|error=access_denied/.test(location.hash)) {
 }
 
 /* ---------- الحالة ---------- */
-let DATA = JSON.parse(document.getElementById('store-data').textContent);
+window.DATA = JSON.parse(document.getElementById('store-data').textContent);
 let CURP = null;
 let CART = [];
 let selectedSizes = {};
