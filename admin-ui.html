@@ -1,8 +1,10 @@
 <!-- شريط الإدارة -->
 <div class="admin-bar admin-only" id="adminBar">
   <button class="btn primary" onclick="openProductForm()">+ إضافة منتج</button>
-  <button class="btn" onclick="openInv()">📦 المخزون</button>
+  <button class="btn" onclick="openOrders()">📩 الطلبات <span id="ordersCount" style="display:none;background:#c8102e;color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-inline-start:4px"></span></button>
   <button class="btn green" onclick="openSale()">💰 تم البيع</button>
+  <button class="btn" onclick="openInv()">📦 المخزون</button>
+  <button class="btn" onclick="openProfit()">📈 الأرباح</button>
   <button class="btn" onclick="openCust()">👥 الزبائن</button>
   <button class="btn" onclick="openSettings()">⚙️ الإعدادات</button>
   <span class="unsaved" id="unsavedTag" style="display:none">⏳ جاري الحفظ…</span>
@@ -35,15 +37,7 @@
       <div class="field"><label for="f_price">السعر</label><input type="number" id="f_price" min="0" step="any" inputmode="decimal"></div>
       <div class="field"><label for="f_old">السعر قبل الخصم</label><input type="number" id="f_old" min="0" step="any" inputmode="decimal"></div>
     </div>
-    <div class="field"><label for="f_cost">سعر التكلفة (للإدارة)</label><input type="number" id="f_cost" min="0" step="any" inputmode="decimal"></div> 
-    <div class="field">
-  <label for="f_gender">فئة المنتج</label>
-  <select id="f_gender" style="width:100%;padding:10px;border:1px solid #ddd;font-size:15px;font-family:inherit;background:#fff">
-    <option value="">محايد (يظهر للذكر والأنثى)</option>
-    <option value="ذكر">ذكر فقط</option>
-    <option value="أنثى">أنثى فقط</option>
-  </select>
-</div>
+    <div class="field"><label for="f_cost">سعر التكلفة (للإدارة)</label><input type="number" id="f_cost" min="0" step="any" inputmode="decimal"></div>
     <div class="field">
       <label for="f_file">صورة المنتج الرئيسية</label>
       <input type="file" id="f_file" accept="image/*" onchange="pickImage(this, 900, 'product')">
@@ -55,7 +49,7 @@
       <label>الألوان والمقاسات وعدد القطع</label>
       <div id="colorRows"></div>
       <button type="button" class="btn" style="margin-top:4px" onclick="addColor()">+ إضافة لون</button>
-      <small>لكل لون: اكتب اسمه ثم مقاساته وعدد القطع.</small>
+      <small>لكل لون: اكتب اسمه، اختر فئته (ذكر / أنثى / محايد)، ثم مقاساته وعدد القطع. اللون «المحايد» يظهر في قسم الذكر وقسم الأنثى معًا.</small>
     </div>
     <datalist id="sizeHints">
       <option value="3 شهور"><option value="6 شهور"><option value="9 شهور">
@@ -72,7 +66,7 @@
 
 <!-- نافذة المخزون -->
 <div class="modal-bg" id="invModal">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:640px">
     <h3>📦 إدارة المخزون</h3>
     <div class="field"><input type="text" id="inv_q" placeholder="🔎 ابحث باسم المنتج" oninput="renderInv()"></div>
     <div id="invList"></div>
@@ -148,6 +142,12 @@
       <div class="field"><label for="sl_ref">رقم الطلب</label><input type="text" id="sl_ref" placeholder="MK-..."></div>
     </div>
     <div id="sl_qual" class="cart-note"></div>
+    <div class="field" style="border:1px dashed #bbb;padding:10px;background:#fafafa">
+      <label for="sl_test">🧪 اختبار ميتا (Test Events)</label>
+      <input type="text" id="sl_test" dir="ltr" placeholder="TEST12345" autocapitalize="characters" autocomplete="off">
+      <button type="button" class="btn" id="sl_testbtn" style="margin-top:8px;width:100%" onclick="sendSale(true)">🧪 إرسال حدث Purchase تجريبي</button>
+      <small>انسخ الكود من ميتا ← مدير الأحداث ← اختبار الأحداث. الاختبار لا يسجّل بيعًا ولا ينقص مخزونًا، والمبيعات الحقيقية لا ترسل هذا الكود أبدًا.</small>
+    </div>
     <div class="modal-actions">
       <button type="button" class="btn green" id="sl_send" onclick="sendSale()">✅ تأكيد البيع</button>
       <button type="button" class="btn danger" id="sl_cancel" onclick="cancelLead()">❌ إلغاء الطلب</button>
@@ -158,6 +158,33 @@
     <b>ملخص 30 يومًا</b><div id="sl_stats" class="cart-note"></div>
     <hr class="sep">
     <b>آخر المبيعات</b><div id="saleLog" class="cart-note"></div>
+  </div>
+</div>
+
+<!-- نافذة الطلبات الجديدة -->
+<div class="modal-bg" id="ordersModal">
+  <div class="modal" style="max-width:560px">
+    <h3>📩 الطلبات الجديدة</h3>
+    <div class="cart-note" id="ordLive"></div>
+    <div id="ordList"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="ordNotifBtn" onclick="enableNotif()">🔔 إشعارات الجهاز</button>
+      <button type="button" class="btn" onclick="refreshLeads()">🔄 تحديث</button>
+      <button type="button" class="btn" onclick="closeModal('ordersModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الأرباح -->
+<div class="modal-bg" id="profitModal">
+  <div class="modal" style="max-width:560px">
+    <h3>📈 الأرباح</h3>
+    <div class="ivf" id="pf_chips"></div>
+    <div id="pf_body"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" onclick="exportProfitCsv()">⬇️ تصدير CSV</button>
+      <button type="button" class="btn" onclick="closeModal('profitModal')">إغلاق</button>
+    </div>
   </div>
 </div>
 
