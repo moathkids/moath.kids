@@ -1712,6 +1712,7 @@ async function loadAdminUI() {
     document.body.insertAdjacentHTML('beforeend', parts[1] || '');
     document.querySelectorAll('.modal-bg:not([role])').forEach(m => { m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
     initColorRows();
+    await new Promise(res => { const s = document.createElement('script'); s.src = 'returns.js?v=1'; s.onload = res; s.onerror = () => { toast('تعذر تحميل ملف الإرجاع returns.js'); res(); }; document.head.appendChild(s); });
     return true;
   } catch (e) {
     console.warn('admin ui failed', e);
@@ -2056,14 +2057,14 @@ async function renderSale() {
   try { const { data, error } = await sb.from('sales').select('*').order('created_at', { ascending: false }).limit(15); if (error) throw error; L = data || []; SALES = L; } catch (e) { $('saleLog').innerHTML = 'تعذر التحميل'; return; }
   const ic = { ok: '✅', unk: '❔', err: '❌', pending: '⏳' };
   $('saleLog').innerHTML = L.length ? L.map(x => '<div style="padding:6px 0;border-bottom:1px solid #eee">' + (ic[x.meta_status] || '') + ' ' + new Date(x.created_at).toLocaleString('ar-EG') +
-    '<br><b>' + esc(x.customer_name || '') + '</b> · ' + esc(x.customer_phone || '') + ' · ' + esc(DATA.settings.currency) + fmt(x.total) +
+    '<br><b>' + esc(x.customer_name || '') + '</b> · ' + esc(x.customer_phone || '') + ' · ' + esc(DATA.settings.currency) + fmt(x.net_total != null ? x.net_total : x.total) + ({ partial: ' · ↩️ مرتجع جزئي', exchanged: ' · 🔄 مستبدل', returned: ' · ↩️ مرتجع' }[x.return_state] || '') +
     '<br><small>' + (x.items || []).map(i => esc(i.name) + '×' + i.qty).join('، ') + '</small></div>').join('') : 'لا توجد مبيعات بعد.';
   // ملخص
   try {
     const since = new Date(Date.now() - 30 * 864e5).toISOString();
     const { data: rows } = await sb.from('sales').select('*').gte('created_at', since).limit(1000);
     const live = (rows || []).filter(x => !['cancelled', 'returned'].includes(x.status));
-    const sales = live.reduce((a, x) => a + Number(x.total || 0), 0);
+    const sales = live.reduce((a, x) => a + Number(x.net_total != null ? x.net_total : x.total || 0), 0);
     $('sl_stats').innerHTML = '<div>المبيعات (30 يوم): ' + esc(DATA.settings.currency) + fmt(sales) + ' · ' + live.length + ' طلب</div>' +
       '<div>🆕 طلبات جديدة بانتظار التأكيد: ' + LEADS.length + '</div>';
   } catch (e) { $('sl_stats').textContent = ''; }
@@ -2086,7 +2087,7 @@ async function loadProfit() {
     if (PF.r === 'today') { const d = new Date(); d.setHours(0, 0, 0, 0); q = q.gte('created_at', d.toISOString()); }
     else if (PF.r !== 'all') q = q.gte('created_at', new Date(Date.now() - Number(PF.r) * 864e5).toISOString());
     const { data, error } = await q; if (error) throw error;
-    rows = (data || []).filter(x => !['cancelled', 'returned'].includes(x.status));
+    rows = (data || []).filter(x => !['cancelled', 'returned'].includes(x.status)).map(x => x.net_total != null ? { ...x, total: x.net_total } : x);
   } catch (e) { $('pf_body').innerHTML = '<div class="cart-empty">تعذّر تحميل المبيعات</div>'; return; }
   const cur = esc(DATA.settings.currency || '');
   let rev = 0, cost = 0, partial = 0; const byDay = new Map(), byProd = new Map();
