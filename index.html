@@ -654,10 +654,10 @@ let pendingImage = null, pendingThumb = null, pendingLogo = null, pendingCover =
 let ST = { admin: false, busy: false, again: false, t: null };
 
 const CART_KEY = 'mk_cart_v1';
-const $ = id => document.getElementById(id);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
-const ik = (c, s) => (c || '') + '|' + (s || '');
+window.$ = id => document.getElementById(id);
+window.esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+window.fmt = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+window.ik = (c, s) => (c || '') + '|' + (s || '');
 
 try { CART = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) { CART = []; }
 
