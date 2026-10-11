@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+<title>لوحة التحكم - معاذ كيدز</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="format-detection" content="telephone=no">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://smzkgmznlmjljuhehlcd.supabase.co" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"></noscript>
+
+<link rel="stylesheet" href="admin.css">
+<!-- PWA -->
+<link rel="manifest" href="admin-manifest.json">
+<link rel="icon" type="image/png" href="icon-admin-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="لوحة معاذ">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     🔐 شاشة تسجيل الدخول
+     ═══════════════════════════════════════════════════════════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="logo.png" alt="معاذ كيدز" onerror="this.style.display='none'">
+      <h1>لوحة التحكم</h1>
+      <p>معاذ كيدز - Moath Kids</p>
+    </div>
+    <form id="loginForm" autocomplete="on">
+      <div class="field">
+        <label for="loginEmail">الإيميل</label>
+        <input type="email" id="loginEmail" required autocomplete="username" placeholder="you@example.com" inputmode="email">
+      </div>
+      <div class="field">
+        <label for="loginPassword">كلمة السر</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-primary" id="loginBtn">تسجيل الدخول</button>
+      <p class="login-error" id="loginError"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     🎛️ لوحة التحكم
+     ═══════════════════════════════════════════════════════════ -->
+<div class="admin-app" id="adminApp" hidden>
+
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <div class="admin-brand">
+        <img src="logo.png" alt="" onerror="this.style.display='none'">
+        <div>
+          <strong>لوحة التحكم</strong>
+          <span>معاذ كيدز</span>
+        </div>
+      </div>
+      <div class="admin-header-actions">
+        <a href="./" target="_blank" rel="noopener" class="btn-ghost"><span>🌐</span><span class="bt">الموقع</span></a>
+        <button type="button" class="btn-ghost" id="logoutBtn"><span>👤</span><span class="bt">خروج</span></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="admin-tabs" id="adminTabs" aria-label="التنقل الرئيسي">
+    <button type="button" class="tab active" data-tab="home"><span class="tab-ic">🏠</span><span class="tab-tx">الرئيسية</span></button>
+<button type="button" class="tab" data-tab="orders"><span class="tab-ic">📥</span><span class="tab-tx">الطلبات</span><span class="tab-badge" id="ordersBadge" hidden></span><span class="tab-badge test" id="testOrdersBadge" hidden></span></button>
+    <button type="button" class="tab" data-tab="exchanges"><span class="tab-ic">🔄</span><span class="tab-tx">الاستبدال</span></button>
+    <button type="button" class="tab" data-tab="returns"><span class="tab-ic">↩️</span><span class="tab-tx">الإرجاع</span></button>
+    <button type="button" class="tab" data-tab="products"><span class="tab-ic">🛍️</span><span class="tab-tx">المنتجات</span></button>
+    <button type="button" class="tab" data-tab="categories"><span class="tab-ic">📂</span><span class="tab-tx">الأقسام</span></button>
+    <button type="button" class="tab" data-tab="meta"><span class="tab-ic">📊</span><span class="tab-tx">Meta Pixel</span></button>
+    <button type="button" class="tab" data-tab="settings"><span class="tab-ic">⚙️</span><span class="tab-tx">الإعدادات</span></button>
+  </nav>
+
+  <main class="admin-main">
+
+    <!-- ═══════════════════════════════════════════════════════
+         🏠 الرئيسية
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tab-panel active" id="tab-home">
+      <h2>لوحة التحكم الرئيسية</h2>
+      <p class="muted">نظرة سريعة على متجرك.</p>
+
+      <h3 class="section-label">📦 المخزون</h3>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon">🛍️</div>
+          <div class="stat-body">
+            <strong id="statProducts">—</strong>
+            <span>منتج</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📂</div>
+          <div class="stat-body">
+            <strong id="statCategories">—</strong>
+            <span>قسم</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-body">
+            <strong id="statStock">—</strong>
+            <span>قطعة في المخزون</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-body">
+            <strong id="statValue">—</strong>
+            <span>قيمة المخزون</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-label">💵 المبيعات والأرباح</h3>
+      <div class="stats-grid" id="statsSalesGrid">
+        <div class="stat-card">
+          <div class="stat-icon">📥</div>
+          <div class="stat-body">
+            <strong id="statOrders">—</strong>
+            <span>عدد الطلبات</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-body">
+            <strong id="statTotalSales">—</strong>
+            <span>إجمالي المبيعات</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💵</div>
+          <div class="stat-body">
+            <strong id="statTotalCost">—</strong>
+            <span>تكلفة المنتجات</span>
+          </div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-icon">📈</div>
+          <div class="stat-body">
+            <strong id="statTotalProfit" style="color:#157a3d">—</strong>
+            <span>ربح المنتجات</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎨</div>
+          <div class="stat-body">
+            <strong id="statProfitMargin">—</strong>
+            <span>نسبة الربح</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-body">
+            <strong id="statAvgOrder">—</strong>
+            <span>متوسط الطلب</span>
+          </div>
+        </div>
+        <div class="stat-card muted-card">
+          <div class="stat-icon">🚚</div>
+          <div class="stat-body">
+            <strong id="statTotalDelivery">—</strong>
+            <span>توصيل محصّل</span>
+          </div>
+        </div>
+        <div class="stat-card muted-card">
+          <div class="stat-icon">🧾</div>
+          <div class="stat-body">
+            <strong id="statTotalCollected">—</strong>
+            <span>الإجمالي المحصّل</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <h3>إجراءات سريعة</h3>
+        <button type="button" class="btn-primary" onclick="Admin.openProductForm()">+ إضافة منتج</button>
+        <button type="button" class="btn-secondary" onclick="Admin.goTab('orders')">📥 الطلبات</button>
+        <button type="button" class="btn-secondary" onclick="Admin.goTab('meta')">📊 Meta Pixel</button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         📥 الطلبات
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-orders">
+      <div class="panel-head">
+        <div>
+          <h2>الطلبات</h2>
+          <p class="muted">طلبات الزبائن الجديدة والسابقة</p>
+        </div>
+<div style="display:flex; gap:6px; flex-wrap:wrap">
+          <button type="button" class="btn-secondary" id="deleteTestBtn" onclick="Admin.deleteTestOrders()" style="display:none">🗑️ حذف التجريبية</button>
+          <button type="button" class="btn-secondary" onclick="Admin.reloadOrders()">🔄 تحديث</button>
+        </div>
+      </div>
+
+   <div class="orders-filter" id="ordersFilterBar">
+        <button type="button" class="ord-filter-btn active" data-ostatus="new">🆕 جديدة</button>
+        <button type="button" class="ord-filter-btn" data-ostatus="confirmed">✅ مؤكدة</button>
+        <button type="button" class="ord-filter-btn" data-ostatus="cancelled">❌ ملغاة</button>
+        <button type="button" class="ord-filter-btn" data-ostatus="all">📋 الكل</button>
+        <button type="button" class="ord-filter-btn" data-ostatus="test">🧪 تجريبي</button>
+      </div>
+
+      <div class="orders-list" id="ordersList"></div>
+    </section>
+
+    <!-- 🔄 الاستبدال -->
+    <section class="tab-panel" id="tab-exchanges">
+      <div class="panel-head">
+        <div>
+          <h2>🔄 الاستبدال</h2>
+          <p class="muted">القطعة الراجعة تعود للمخزون والبديلة تُسحب منه، والأرباح تُحسب تلقائياً</p>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap">
+          <button type="button" class="btn-secondary" onclick="Admin.reloadOps()">🔄 تحديث</button>
+          <button type="button" class="btn-primary" onclick="Admin.openSalePicker('exchange')">+ استبدال جديد</button>
+        </div>
+      </div>
+      <div class="ops-summary" id="exchangesSummary"></div>
+      <div class="returns-list" id="exchangesList"></div>
+    </section>
+
+    <!-- ↩️ الإرجاع -->
+    <section class="tab-panel" id="tab-returns">
+      <div class="panel-head">
+        <div>
+          <h2>↩️ الإرجاع</h2>
+          <p class="muted">القطعة السليمة تعود للمخزون ويُخصم المسترد من المبيعات والأرباح</p>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap">
+          <button type="button" class="btn-secondary" onclick="Admin.reloadOps()">🔄 تحديث</button>
+          <button type="button" class="btn-primary" onclick="Admin.openSalePicker('return')">+ إرجاع جديد</button>
+        </div>
+      </div>
+      <div class="ops-summary" id="returnsSummary"></div>
+      <div class="returns-list" id="returnsList"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         🛍️ المنتجات
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-products">
+      <div class="panel-head">
+        <div>
+          <h2>المنتجات</h2>
+          <p class="muted">إدارة منتجات متجرك</p>
+        </div>
+        <button type="button" class="btn-primary" onclick="Admin.openProductForm()">+ إضافة منتج</button>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="productsSearch" placeholder="🔍 ابحث عن منتج..." oninput="Admin.filterProductsDebounced()">
+        <select id="productsFilter" onchange="Admin.filterProducts()">
+          <option value="">كل الأقسام</option>
+        </select>
+      </div>
+
+      <div class="products-list" id="productsList"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         📂 الأقسام
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-categories">
+      <div class="panel-head">
+        <div>
+          <h2>الأقسام</h2>
+          <p class="muted">إدارة أقسام المتجر</p>
+        </div>
+        <button type="button" class="btn-primary" onclick="Admin.openCategoryForm()">+ إضافة قسم</button>
+      </div>
+      <div class="categories-list" id="categoriesList"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         📊 Meta Pixel
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-meta">
+      <div class="panel-head">
+        <div>
+          <h2>📊 Meta Pixel</h2>
+          <p class="muted">متابعة أحداث Meta Conversions API</p>
+        </div>
+        <button type="button" class="btn-secondary" onclick="Admin.reloadMeta()">🔄 تحديث</button>
+      </div>
+
+      <div class="meta-content" id="metaContent">
+        <div class="empty-state"><strong>جاري التحميل...</strong></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ⚙️ الإعدادات
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-settings">
+      <div class="panel-head">
+        <div>
+          <h2>الإعدادات</h2>
+          <p class="muted">إعدادات المتجر العامة</p>
+        </div>
+      </div>
+      <div class="settings-list" id="settingsList">
+        <p class="muted">جاري التحميل...</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     🪟 النوافذ
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="modal-bg" id="productModal">
+  <div class="modal">
+    <button type="button" class="modal-close modal-close-float" onclick="Admin.closeProductForm()" aria-label="إغلاق">✕</button>
+    <div class="modal-body" id="productModalBody">
+      <p class="muted">جاري التحميل...</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="categoryModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="categoryModalTitle">إضافة قسم</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeCategoryForm()">✕</button>
+    </div>
+    <div class="modal-body" id="categoryModalBody">
+      <p class="muted">جاري التحميل...</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="orderModal">
+  <div class="modal order-modal">
+    <div class="modal-head">
+      <h3 id="orderModalTitle">تفاصيل الطلب</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeOrderForm()">✕</button>
+    </div>
+    <div class="modal-body" id="orderModalBody">
+      <p class="muted">جاري التحميل...</p>
+    </div>
+  </div>
+</div>
+<!-- نافذة تسجيل مرتجع -->
+<div class="modal-bg" id="returnModal">
+  <div class="modal order-modal">
+    <div class="modal-head">
+      <h3 id="returnModalTitle">↩️ تسجيل مرتجع</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeReturnForm()">✕</button>
+    </div>
+    <div class="modal-body" id="returnModalBody">
+      <p class="muted">جاري التحميل...</p>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة تسجيل استبدال -->
+<div class="modal-bg" id="exchangeModal">
+  <div class="modal order-modal">
+    <div class="modal-head">
+      <h3 id="exchangeModalTitle">🔄 تسجيل استبدال</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeExchangeForm()">✕</button>
+    </div>
+    <div class="modal-body" id="exchangeModalBody">
+      <p class="muted">جاري التحميل...</p>
+    </div>
+  </div>
+</div>
+
+<!-- اختيار الفاتورة لعملية جديدة -->
+<div class="modal-bg" id="salePickModal">
+  <div class="modal order-modal">
+    <div class="modal-head">
+      <h3 id="salePickTitle">اختر الفاتورة</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeSalePick()">✕</button>
+    </div>
+    <div class="modal-body" id="salePickBody"></div>
+  </div>
+</div>
+
+<!-- تفاصيل عملية إرجاع/استبدال -->
+<div class="modal-bg" id="opDetailModal">
+  <div class="modal order-modal">
+    <div class="modal-head">
+      <h3 id="opDetailTitle">تفاصيل العملية</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeOpDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="opDetailBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" crossorigin="anonymous"></script>
+<script src="config.js"></script>
+<script src="utils.js"></script>
+<script src="admin.js"></script>
+<!-- PWA Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('admin-sw.js')
+      .then(function(reg) { console.log('✅ Admin SW registered:', reg.scope); })
+      .catch(function(e) { console.warn('⚠️ SW failed:', e); });
+  });
+}
+</script>
+</body>
+</html>
