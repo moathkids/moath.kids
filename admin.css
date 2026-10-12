@@ -1130,6 +1130,36 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
   .order-btn-exchange:hover { background: #bbdefb; border-color: #1565c0; }
 }
 
+
+/* زر "↩️ إلغاء التأكيد" — يظهر بجوار الإرجاع والاستبدال */
+.order-btn-undo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px;
+  border-radius: 13px;
+  font-size: 14.5px;
+  font-weight: 700;
+  background: #fde8eb;
+  color: #c8102e;
+  border: 1.5px solid #f3c3cb;
+  grid-column: 1 / -1;
+  transition: background .15s, transform .1s, border-color .15s;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.order-btn-undo:active {
+  transform: scale(.98);
+}
+@media (hover: hover) {
+  .order-btn-undo:hover {
+    background: #fbd5da;
+    border-color: #c8102e;
+  }
+}
+
 /* ===================================================================
    ↩️ قوائم المرتجعات والاستبدالات
    =================================================================== */
@@ -1223,3 +1253,140 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 .mq.ok { background: var(--green-bg); color: var(--green); }
 .mq.no { background: var(--red-bg); color: var(--red); }
 .mq-hint { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+
+/* ===================================================================
+   💰 قسم المالية
+   =================================================================== */
+
+.finance-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  margin: 16px 0 24px;
+  background: linear-gradient(135deg, #effbf3 0%, #ffffff 100%);
+  border: 2px solid #157a3d;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.finance-balance span { color: #157a3d; }
+.finance-balance strong {
+  font-size: 22px;
+  color: #157a3d;
+  font-weight: 800;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.finance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.finance-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 13.5px;
+}
+.finance-row.income { border-inline-start: 4px solid #157a3d; }
+.finance-row.expense { border-inline-start: 4px solid #c8102e; }
+
+.finance-row-info { min-width: 0; }
+.finance-row-title {
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.finance-row-meta { font-size: 11.5px; color: #999; }
+.finance-row-amount {
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.finance-row.expense .finance-row-amount { color: #c8102e; }
+.finance-row.income .finance-row-amount { color: #157a3d; }
+.finance-row-delete {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  background: #fde8eb;
+  color: #c8102e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
+}
+.finance-row-delete:active { transform: scale(.95); }
+
+.finance-add-btn { width: 100%; margin-bottom: 14px; }
+
+.finance-form-field { margin-bottom: 14px; }
+.finance-form-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+.finance-form-field input,
+.finance-form-field select,
+.finance-form-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+  background: #fff;
+  color: #000;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.finance-form-field input:focus,
+.finance-form-field select:focus,
+.finance-form-field textarea:focus { border-color: #000; }
+.finance-form-field textarea { min-height: 70px; resize: vertical; }
+
+.finance-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.finance-form-actions button {
+  flex: 1;
+  min-height: 50px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.finance-form-cancel {
+  background: #f2f0ec;
+  color: #555;
+  border: none;
+}
+.finance-form-save {
+  background: #000;
+  color: #fff;
+  border: none;
+}
+.finance-form-save:disabled { opacity: 0.5; cursor: not-allowed; }

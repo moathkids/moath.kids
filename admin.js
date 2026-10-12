@@ -38,6 +38,8 @@ window.Admin = (function () {
     opsReady: false,
     op: null,
     opView: null,
+    capital: [],
+    expenses: [],
     pick: null
   };
 
@@ -151,6 +153,8 @@ window.Admin = (function () {
         loadOrders(),
         loadSales(),
         loadCapiLog(),
+        loadCapital(),
+        loadExpenses(),
         loadOps()
       ]);
       renderAll();
@@ -215,6 +219,36 @@ window.Admin = (function () {
     if (error) { console.warn('capi_log load failed:', error); return; }
     S.capiLog = data || [];
   }
+  /* ═══════════════════════════════════════════════════════════
+     💰 دوال تحميل المالية
+     ═══════════════════════════════════════════════════════════ */
+
+  async function loadCapital() {
+    const { data, error } = await sb
+      .from('capital')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.warn('capital load failed:', error);
+      S.capital = [];
+      return;
+    }
+    S.capital = data || [];
+  }
+
+  async function loadExpenses() {
+    const { data, error } = await sb
+      .from('expenses')
+      .select('*')
+      .order('expense_date', { ascending: false });
+    if (error) {
+      console.warn('expenses load failed:', error);
+      S.expenses = [];
+      return;
+    }
+    S.expenses = data || [];
+  }
+
 
   function startOrdersRefresh() {
     if (S.ordersTimer) clearInterval(S.ordersTimer);
@@ -334,6 +368,7 @@ async function markOrderAsTest(id) {
     renderOps();
     renderSettings();
     renderMetaTab();
+    renderFinance();
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -441,6 +476,123 @@ const grid = document.getElementById('statsSalesGrid');
         el('statProfit').style.color = '#8a8a8a';
       }
     }
+  }
+  
+  /* ═══════════════════════════════════════════════════════════
+     💰 دوال عرض المالية
+     ═══════════════════════════════════════════════════════════ */
+
+  function calcFinanceTotals() {
+    let capitalIn = 0;
+    let capitalOut = 0;
+    S.capital.forEach(c => {
+      const a = Number(c.amount) || 0;
+      if (c.kind === 'withdrawal') capitalOut += a;
+      else capitalIn += a;
+    });
+    const capitalNet = capitalIn - capitalOut;
+
+    const liveSales = (S.sales || []).filter(s => s.status !== 'cancelled' && !s.is_test);
+    let totalRevenue = 0;
+    let totalCost = 0;
+    liveSales.forEach(s => {
+      const items = Number(s.items_total) || 0;
+      const cost = Number(s.items_cost) || 0;
+      const retTotal = Number(s.returned_total) || 0;
+      const retCost = Number(s.returned_cost) || 0;
+      totalRevenue += items - retTotal;
+      totalCost += cost - retCost;
+    });
+    const grossProfit = totalRevenue - totalCost;
+
+    let totalExpenses = 0;
+    S.expenses.forEach(e => {
+      totalExpenses += Number(e.amount) || 0;
+    });
+
+    const netProfit = grossProfit - totalExpenses;
+    const balance = capitalNet + netProfit;
+
+    return {
+      capitalIn, capitalOut, capitalNet,
+      totalRevenue, totalCost, grossProfit,
+      totalExpenses, netProfit, balance
+    };
+  }
+
+  function renderFinance() {
+    const cur = C.CURRENCY || '₪';
+    const t = calcFinanceTotals();
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    set('finCapital', cur + U.fmt(t.capitalIn));
+    set('finProfit', cur + U.fmt(t.netProfit));
+    set('finExpenses', cur + U.fmt(t.totalExpenses));
+    set('finWithdrawals', cur + U.fmt(t.capitalOut));
+    set('finBalance', cur + U.fmt(t.balance));
+
+    const profitEl = document.getElementById('finProfit');
+    if (profitEl) profitEl.style.color = t.netProfit >= 0 ? '#157a3d' : '#c8102e';
+    const balEl = document.getElementById('finBalance');
+    if (balEl) balEl.style.color = t.balance >= 0 ? '#157a3d' : '#c8102e';
+
+    renderExpensesList();
+    renderCapitalList();
+  }
+
+  function renderExpensesList() {
+    const box = document.getElementById('expensesList');
+    if (!box) return;
+    const cur = C.CURRENCY || '₪';
+
+    if (!S.expenses.length) {
+      box.innerHTML = '<div class="empty-state"><strong>لا توجد مصاريف</strong>اضغط «إضافة مصروف» للبدء</div>';
+      return;
+    }
+
+    box.innerHTML = S.expenses.map(e => {
+      const date = e.expense_date ? new Date(e.expense_date).toLocaleDateString('ar-EG') : '';
+      return '<div class="finance-row expense">' +
+        '<div class="finance-row-info">' +
+          '<div class="finance-row-title">' + esc(e.category || 'مصروف') + '</div>' +
+          (e.note ? '<div class="finance-row-meta">' + esc(e.note) + '</div>' : '') +
+          (date ? '<div class="finance-row-meta">📅 ' + esc(date) + '</div>' : '') +
+        '</div>' +
+        '<div class="finance-row-amount">− ' + esc(cur) + U.fmt(e.amount) + '</div>' +
+        '<button type="button" class="finance-row-delete" data-del-expense="' + esc(e.id) + '">✕</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderCapitalList() {
+    const box = document.getElementById('capitalList');
+    if (!box) return;
+    const cur = C.CURRENCY || '₪';
+
+    if (!S.capital.length) {
+      box.innerHTML = '<div class="empty-state"><strong>لا يوجد رأس مال مسجّل</strong></div>';
+      return;
+    }
+
+    box.innerHTML = S.capital.map(c => {
+      const isWithdrawal = c.kind === 'withdrawal';
+      const date = c.created_at ? new Date(c.created_at).toLocaleDateString('ar-EG') : '';
+      const label = isWithdrawal ? 'سحب' : (c.kind === 'initial' ? 'رأس مال أولي' : 'ضخ سيولة');
+      const sign = isWithdrawal ? '− ' : '+ ';
+      return '<div class="finance-row ' + (isWithdrawal ? 'expense' : 'income') + '">' +
+        '<div class="finance-row-info">' +
+          '<div class="finance-row-title">' + esc(label) + '</div>' +
+          (c.note ? '<div class="finance-row-meta">' + esc(c.note) + '</div>' : '') +
+          (date ? '<div class="finance-row-meta">📅 ' + esc(date) + '</div>' : '') +
+        '</div>' +
+        '<div class="finance-row-amount">' + sign + esc(cur) + U.fmt(c.amount) + '</div>' +
+        '<button type="button" class="finance-row-delete" data-del-capital="' + esc(c.id) + '">✕</button>' +
+      '</div>';
+    }).join('');
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -1215,6 +1367,9 @@ const grid = document.getElementById('statsSalesGrid');
             ? '<div class="order-completed-note">↩️ أُرجعت هذه الفاتورة بالكامل</div>'
             : '<button type="button" class="order-btn-return" data-oact="return">↩️ إرجاع</button>' +
               '<button type="button" class="order-btn-exchange" data-oact="exchange">🔄 استبدال</button>') +
+              (liveOps.length === 0
+        ? '<button type="button" class="order-btn-undo" data-oact="undo">↩️ إلغاء التأكيد</button>'
+        : '') +
         waBtn;
     } else if (isCancelled) {
       actionsHtml =
@@ -1293,6 +1448,7 @@ const grid = document.getElementById('statsSalesGrid');
         else if (act === 'reopen') reopenOrder();
         else if (act === 'return') openReturnForm(o.ref || o.id);
         else if (act === 'exchange') openExchangeForm(o.ref || o.id);
+        else if (act === 'undo') undoConfirmOrder();
       });
     });
   }
@@ -1475,6 +1631,44 @@ const stockMsg = o.is_test
       closeOrderForm();
     } catch (e) {
       fail(e, 'فشل الإلغاء');
+    }
+  }
+  async function undoConfirmOrder() {
+    const o = S.orderEditing;
+    if (!o) return;
+    if (o.status !== 'confirmed') return notify('الطلب ليس مؤكداً', 'error');
+
+    const confirmMsg = 'إلغاء تأكيد الطلب؟\n\n' +
+      '✓ سيُعاد المخزون\n' +
+      '✓ ستعود حالة الطلب إلى "جديدة"\n' +
+      '✓ ستُعلَّم الفاتورة كملغاة\n\n' +
+      '⚠️ Purchase في Meta لا يمكن إلغاؤه';
+
+    if (!confirm(confirmMsg)) return;
+
+    const body = $('orderModalBody');
+    const btn = body.querySelector('[data-oact="undo"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'جاري الإلغاء...'; }
+
+    try {
+      const { data, error } = await sb.rpc('admin_undo_confirm', { p_lead_id: o.id });
+      if (error) throw error;
+      if (!data || !data.ok) throw new Error('فشل إلغاء التأكيد');
+
+      notify('تم إلغاء التأكيد ✓ وعاد المخزون', 'success');
+      o.status = 'new';
+      const idx = S.orders.findIndex(x => x.id === o.id);
+      if (idx >= 0) S.orders[idx].status = 'new';
+      updateOrdersBadge();
+      renderOrders();
+      closeOrderForm();
+      await loadProducts();
+      await loadSales();
+      renderStats();
+      renderProducts();
+    } catch (e) {
+      fail(e, 'فشل إلغاء التأكيد');
+      if (btn) { btn.disabled = false; btn.textContent = '↩️ إلغاء التأكيد'; }
     }
   }
 
@@ -2171,6 +2365,89 @@ function closeExchangeForm() { closeOp(); }
       '</div>';
     }).join('');
   }
+/* ═══════════════════════════════════════════════════════════
+     💰 نماذج المالية (Modals)
+     ═══════════════════════════════════════════════════════════ */
+
+  function openFinanceModal(title) {
+    const modal = $('financeModal');
+    const titleEl = $('financeModalTitle');
+    if (titleEl) titleEl.textContent = title;
+    if (modal) modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFinanceModal() {
+    const modal = $('financeModal');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function openExpenseForm() {
+    const cur = C.CURRENCY || '₪';
+    const today = new Date().toISOString().slice(0, 10);
+
+    const categories = [
+      'إعلانات',
+      'تغليف',
+      'شحن',
+      'الإنترنت والهاتف',
+      'الكهرباء والماء',
+      'المواصلات',
+      'الإيجار',
+      'أخرى'
+    ];
+
+    const body = $('financeModalBody');
+    body.innerHTML =
+      '<div class="finance-form-field">' +
+        '<label>الفئة *</label>' +
+        '<select id="exCategory">' +
+          categories.map(c => '<option value="' + c + '">' + c + '</option>').join('') +
+        '</select>' +
+      '</div>' +
+      '<div class="finance-form-field">' +
+        '<label>المبلغ (' + cur + ') *</label>' +
+        '<input type="number" id="exAmount" min="0" step="0.01" inputmode="decimal" placeholder="مثال: 500">' +
+      '</div>' +
+      '<div class="finance-form-field">' +
+        '<label>التاريخ</label>' +
+        '<input type="date" id="exDate" value="' + today + '">' +
+      '</div>' +
+      '<div class="finance-form-field">' +
+        '<label>ملاحظة <span style="color:#999;font-weight:400">(اختياري)</span></label>' +
+        '<textarea id="exNote" placeholder="مثال: إعلان فيسبوك لشهر أكتوبر"></textarea>' +
+      '</div>' +
+      '<div class="finance-form-actions">' +
+        '<button type="button" class="finance-form-cancel" onclick="Admin.closeFinanceModal()">إلغاء</button>' +
+        '<button type="button" class="finance-form-save" id="exSave" onclick="Admin.saveExpense()">حفظ المصروف</button>' +
+      '</div>';
+
+    openFinanceModal('💸 إضافة مصروف');
+  }
+
+  function openCapitalForm(kind) {
+    const cur = C.CURRENCY || '₪';
+    const isWithdrawal = kind === 'withdrawal';
+    const title = isWithdrawal ? '📤 سحب من رأس المال' : '📥 ضخ سيولة';
+
+    const body = $('financeModalBody');
+    body.innerHTML =
+      '<div class="finance-form-field">' +
+        '<label>المبلغ (' + cur + ') *</label>' +
+        '<input type="number" id="capAmount" min="0" step="0.01" inputmode="decimal" placeholder="مثال: 1000">' +
+      '</div>' +
+      '<div class="finance-form-field">' +
+        '<label>ملاحظة <span style="color:#999;font-weight:400">(اختياري)</span></label>' +
+        '<textarea id="capNote" placeholder="' + (isWithdrawal ? 'مثال: سحب شخصي' : 'مثال: إضافة من مدخراتي') + '"></textarea>' +
+      '</div>' +
+      '<div class="finance-form-actions">' +
+        '<button type="button" class="finance-form-cancel" onclick="Admin.closeFinanceModal()">إلغاء</button>' +
+        '<button type="button" class="finance-form-save" id="capSave" onclick="Admin.saveCapital(\'' + kind + '\')">حفظ</button>' +
+      '</div>';
+
+    openFinanceModal(title);
+  }
 
   function openCategoryForm(id) {
     const c = id ? S.categories.find(x => x.id === id) : null;
@@ -2192,6 +2469,93 @@ function closeExchangeForm() { closeOp(); }
     if (modal) modal.classList.remove('open');
     document.body.style.overflow = '';
     S.editing = null;
+  }
+/* ═══════════════════════════════════════════════════════════
+     💾 حفظ وحذف المالية
+     ═══════════════════════════════════════════════════════════ */
+
+  async function saveExpense() {
+    const category = $('exCategory').value;
+    const amount = parseFloat($('exAmount').value);
+    const date = $('exDate').value || new Date().toISOString().slice(0, 10);
+    const note = ($('exNote').value || '').trim();
+    const btn = $('exSave');
+
+    if (!category) return notify('اختر الفئة', 'error');
+    if (!isFinite(amount) || amount <= 0) return notify('أدخل مبلغاً صحيحاً', 'error');
+
+    if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+
+    try {
+      const { error } = await sb.from('expenses').insert({
+        category: category,
+        amount: amount,
+        expense_date: date,
+        note: note || null
+      });
+      if (error) throw error;
+
+      notify('تم حفظ المصروف ✓', 'success');
+      closeFinanceModal();
+      await loadExpenses();
+      renderFinance();
+    } catch (e) {
+      fail(e, 'فشل حفظ المصروف');
+      if (btn) { btn.disabled = false; btn.textContent = 'حفظ المصروف'; }
+    }
+  }
+
+  async function saveCapital(kind) {
+    const amount = parseFloat($('capAmount').value);
+    const note = ($('capNote').value || '').trim();
+    const btn = $('capSave');
+
+    if (!isFinite(amount) || amount <= 0) return notify('أدخل مبلغاً صحيحاً', 'error');
+
+    if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+
+    try {
+      const { error } = await sb.from('capital').insert({
+        amount: amount,
+        kind: kind,
+        note: note || null
+      });
+      if (error) throw error;
+
+      notify('تم الحفظ ✓', 'success');
+      closeFinanceModal();
+      await loadCapital();
+      renderFinance();
+    } catch (e) {
+      fail(e, 'فشل الحفظ');
+      if (btn) { btn.disabled = false; btn.textContent = 'حفظ'; }
+    }
+  }
+
+  async function deleteExpense(id) {
+    if (!confirm('حذف هذا المصروف؟')) return;
+    try {
+      const { error } = await sb.from('expenses').delete().eq('id', id);
+      if (error) throw error;
+      notify('تم الحذف ✓', 'success');
+      await loadExpenses();
+      renderFinance();
+    } catch (e) {
+      fail(e, 'فشل الحذف');
+    }
+  }
+
+  async function deleteCapital(id) {
+    if (!confirm('حذف هذا السجل؟ سيؤثر على حساب رأس المال.')) return;
+    try {
+      const { error } = await sb.from('capital').delete().eq('id', id);
+      if (error) throw error;
+      notify('تم الحذف ✓', 'success');
+      await loadCapital();
+      renderFinance();
+    } catch (e) {
+      fail(e, 'فشل الحذف');
+    }
   }
 
   async function saveCategory() {
@@ -2848,6 +3212,27 @@ const row = { id: 1 };
         else if (b.dataset.act === 'delcat') deleteCategory(id);
       });
     }
+// معالج حذف المصاريف ورأس المال
+    const finList1 = $('expensesList');
+    if (finList1) {
+      finList1.addEventListener('click', e => {
+        const btn = e.target.closest('[data-del-expense]');
+        if (btn) {
+          e.stopPropagation();
+          deleteExpense(btn.dataset.delExpense);
+        }
+      });
+    }
+    const finList2 = $('capitalList');
+    if (finList2) {
+      finList2.addEventListener('click', e => {
+        const btn = e.target.closest('[data-del-capital]');
+        if (btn) {
+          e.stopPropagation();
+          deleteCapital(btn.dataset.delCapital);
+        }
+      });
+    }
 
     const sl = $('settingsList');
     if (sl) {
@@ -3011,11 +3396,13 @@ const row = { id: 1 };
       const prm = $('presetModal');
       const rtm = $('returnModal');
       const exm = $('exchangeModal');
+      const finModal = $('financeModal');
       if (odm2 && odm2.classList.contains('open')) closeOpDetail();
       else if (spm2 && spm2.classList.contains('open')) closeSalePick();
       else if (pm2 && pm2.classList.contains('open')) closeProductForm();
       else if (cm && cm.classList.contains('open')) closeCategoryForm();
       else if (rtm && rtm.classList.contains('open')) closeReturnForm();
+      else if (finModal && finModal.classList.contains('open')) closeFinanceModal();
       else if (exm && exm.classList.contains('open')) closeExchangeForm();
       else if (om && om.classList.contains('open')) closeOrderForm();
       else if (prm && prm.classList.contains('open')) {
@@ -3065,6 +3452,11 @@ return {
     openSalePicker: openSalePicker,
     closeSalePick: closeSalePick,
     closeOpDetail: closeOpDetail,
+    openExpenseForm: openExpenseForm,
+    openCapitalForm: openCapitalForm,
+    closeFinanceModal: closeFinanceModal,
+    saveExpense: saveExpense,
+    saveCapital: saveCapital,
     reloadOps: reloadOps
   };
 })();

@@ -370,7 +370,16 @@
     if (yr) yr.textContent = new Date().getFullYear();
 
     const ht = U.$('heroTitle');
-    if (ht) ht.textContent = s.title || '';
+    if (ht) {
+      // العلامة | في العنوان = سطر جديد (مثال: أجمل إطلالات | لأصغر أحلامك)
+      ht.textContent = '';
+      String(s.title || '').split('|').forEach(function (part, i) {
+        if (i) ht.appendChild(document.createElement('br'));
+        ht.appendChild(document.createTextNode(part.trim()));
+      });
+    }
+    const hct = U.$('heroCtaText');
+    if (hct) hct.textContent = (C.HERO_BTN_TEXT || 'تسوق الآن');
     const tg = U.$('tagline');
     if (tg) tg.textContent = s.tagline || '';
 
@@ -452,7 +461,23 @@
     });
   }
 
+  function bindHeroCta() {
+    const a = U.$('heroCta');
+    if (!a || a.dataset.bound) return;
+    a.dataset.bound = '1';
+    a.addEventListener('click', function (e) {
+      const target = U.$('shop');
+      if (!target) return;
+      e.preventDefault();
+      const bar = document.querySelector('.topbar');
+      const off = (bar ? bar.offsetHeight : 70) + 8;
+      const y = target.getBoundingClientRect().top + window.pageYOffset - off;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  }
+
   function renderHero() {
+    bindHeroCta();
     const s = STORE.settings;
     const src = s.cover || (STORE.products.find(p => p.image) || {}).image || '';
     const hv = U.$('heroVisual');
@@ -1100,17 +1125,7 @@ if (submit) submit.addEventListener('click', submitOrder);
 
     const waUrl = U.waLink(STORE.settings.phone, msg);
 
-// افتح نافذة واتساب أثناء ضغطة المستخدم نفسها حتى لا يتأخر فتحه بسبب حفظ الطلب.
-    // نعرض حالة انتظار قصيرة ثم نحولها إلى رسالة الطلب بعد نجاح الحفظ.
-    let waWin = null;
-    try {
-      waWin = window.open('about:blank', '_blank');
-      if (waWin) {
-        waWin.opener = null;
-        waWin.document.title = 'معاذ كيدز';
-        waWin.document.body.innerHTML = '<main dir="rtl" style="font-family:system-ui,sans-serif;text-align:center;padding:48px 20px;color:#222"><h2>معاذ كيدز</h2><p>جاري تسجيل طلبك وتجهيز رسالة الواتساب…</p><p style="color:#777;font-size:14px">يرجى الانتظار للحظات</p></main>';
-      }
-    } catch (e) { waWin = null; }
+
 
     // 1) احفظ الطلب أولاً
     let savedOk = false;
@@ -1158,35 +1173,17 @@ if (submit) submit.addEventListener('click', submitOrder);
       console.warn('Lead save exception:', e);
     }
 
-    // بعد نجاح حفظ الطلب، حوّل النافذة المفتوحة مسبقاً إلى واتساب فوراً.
-    // إذا منع المتصفح فتح نافذة جديدة، انتقل في الصفحة الحالية دون عرض نجاح مضلل.
-    if (savedOk) {
-      if (waWin && !waWin.closed) {
-        try { waWin.location.replace(waUrl); } catch (e) { window.location.href = waUrl; }
-      } else {
-        window.location.href = waUrl;
-        return;
-      }
-    } else if (waWin && !waWin.closed) {
-      try { waWin.close(); } catch (e) {}
-    }
-
-    // 2) تتبّع Meta (بعد بدء الانتقال إلى واتساب حتى لا يؤخر فتحه)
-    if (E) {
+    // تتبّع Lead فقط بعد نجاح حفظ الطلب، حتى لا تُحتسب محاولات الحفظ الفاشلة.
+    if (savedOk && E) {
       E.lead({
         ref: ref,
         items: itemsPayload,
-        total: itemsTotal,   // سعر البضاعة فقط (التوصيل لشركة التوصيل)
-        customer: {
-          name: customerName,
-          phone: customerPhone,
-          email: customerEmail,
-          city: region
-        }
+        total: itemsTotal,
+        customer: { name: customerName, phone: customerPhone, email: customerEmail, city: region }
       });
     }
 
-    // 3) النتيجة للزبون
+// 3) النتيجة للزبون
     if (savedOk) {
       const successRef = U.$('successRef');
       if (successRef) successRef.textContent = ref;
@@ -1196,15 +1193,59 @@ if (submit) submit.addEventListener('click', submitOrder);
       STORE.cart = [];
       saveCart();
       renderCart();
+      startWhatsAppAutoOpen(waUrl);
     } else {
-      U.toast('⚠️ تعذّر حفظ الطلب، لكن رسالة الواتساب جاهزة — أرسلها لإتمام الطلب');
+      U.toast('⚠️ تعذّر حفظ الطلب، حاول مرة أخرى');
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'إتمام الطلب عبر واتساب';
       }
     }
+  }
 
-    // تم توجيه نافذة واتساب أعلاه مباشرة بعد نجاح حفظ الطلب.
+  /* ═══════════════════════════════════════════════════════════
+     ⏱️ فتح واتساب تلقائياً مع مؤقّت مرئي
+     ═══════════════════════════════════════════════════════════ */
+
+  let _waTimer = null;
+
+  function startWhatsAppAutoOpen(waUrl) {
+    const timerEl = U.$('successTimer');
+    let seconds = 5;
+
+    if (_waTimer) clearInterval(_waTimer);
+
+    const updateTimerText = () => {
+      if (!timerEl) return;
+      timerEl.textContent = '⏳ سيُفتح واتساب تلقائياً خلال ' + seconds + ' ثوان...';
+    };
+    updateTimerText();
+
+    _waTimer = setInterval(() => {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(_waTimer);
+        _waTimer = null;
+        try { window.location.href = waUrl; } catch (_) {}
+      } else {
+        updateTimerText();
+      }
+    }, 1000);
+
+    const closeBtn = U.$('successCloseBtn');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        if (_waTimer) { clearInterval(_waTimer); _waTimer = null; }
+        if (timerEl) timerEl.textContent = 'يمكنك فتح واتساب يدوياً من الزر الأخضر';
+      };
+    }
+
+    const waBtn = U.$('successWaLink');
+    if (waBtn) {
+      waBtn.onclick = () => {
+        if (_waTimer) { clearInterval(_waTimer); _waTimer = null; }
+      };
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════

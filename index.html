@@ -139,16 +139,17 @@ s.parentNode.insertBefore(t,s)}(window, document,'script',
 </aside>
 
 <div class="hero-bg" id="top">
-  <div class="container">
+  <div class="pf" id="heroVisual"></div>
+  <div class="container hero-wrap">
     <header class="hero">
       <div class="hero-text">
         <h1 id="heroTitle"></h1>
         <p id="tagline"></p>
+        <svg class="hero-heart" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.4 2.9 5 6.2 5c1.9 0 3.4 1 4.3 2.4h3C14.4 6 15.9 5 17.8 5c3.3 0 5.2 3.4 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
         <div class="btn-row">
-          <a class="cta-main" href="#shop">تسوق الآن<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+          <a class="cta-main" id="heroCta" href="#shop"><span id="heroCtaText">تسوق الآن</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
         </div>
       </div>
-      <div class="pf" id="heroVisual"></div>
     </header>
   </div>
 </div>
@@ -197,10 +198,7 @@ s.parentNode.insertBefore(t,s)}(window, document,'script',
     </div>
   </section>
 
-  <section class="delivery" id="delivery" hidden>
-    <div class="sec-head"><div><h2>التوصيل</h2><p id="deliverySub"></p></div></div>
-    <div class="dgrid" id="deliveryGrid"></div>
-  </section>
+
 
   <section class="faq" id="faq">
     <div class="sec-head"><div><h2>أسئلة شائعة</h2><p>إجابات سريعة قبل الطلب</p></div></div>
@@ -274,36 +272,29 @@ s.parentNode.insertBefore(t,s)}(window, document,'script',
   </div>
 </div>
 
-<div class="modal-bg" id="successModal" role="dialog" aria-modal="true" aria-label="تم تسجيل الطلب وبانتظار إرسال رسالة الواتساب">
+<div class="modal-bg" id="successModal" role="dialog" aria-modal="true" aria-label="خطوة أخيرة لإتمام الطلب">
   <div class="modal success-modal">
     <div class="modal-body">
-      <div class="success-check">
-        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="4 12 10 18 20 6"/>
+      <div class="success-icon-wa">
+        <svg viewBox="0 0 24 24" width="42" height="42" fill="currentColor">
+          <use href="#icon-wa"/>
         </svg>
       </div>
-      <h3 class="success-title">تم تسجيل طلبك بنجاح</h3>
+      <h3 class="success-title">خطوة أخيرة</h3>
+      <p class="success-sub">طلبك محفوظ في النظام ✓<br>لكن لم يُرسل إلينا بعد</p>
       <div class="success-ref">
         <span class="success-ref-label">رقم طلبك</span>
         <strong class="success-ref-value" id="successRef"></strong>
       </div>
-      <p class="success-note">طلبك مسجّل لدينا. أرسل رسالة الطلب عبر الواتساب حتى نراجع التفاصيل ونتواصل معك لتأكيده. لا يبدأ التجهيز إلا بعد تأكيد الطلب.</p>
-      <a class="success-wa" id="successWaLink" href="#" target="_blank" rel="noopener">لم يفتح الواتساب؟ اضغط هنا لإرسال الطلب</a>
-      <div class="success-steps">
-        <div class="success-step">
-          <div class="success-step-num">1</div>
-          <div class="success-step-text">ترسل الطلب</div>
-        </div>
-        <div class="success-step">
-          <div class="success-step-num">2</div>
-          <div class="success-step-text">نؤكد معك</div>
-        </div>
-        <div class="success-step">
-          <div class="success-step-num">3</div>
-          <div class="success-step-text">نوصّل لك</div>
-        </div>
+      <div class="success-alert">
+        ⚠️ لن نبدأ بتجهيز الطلب حتى تصلك رسالتك على واتساب
       </div>
-      <button type="button" class="success-btn" id="successCloseBtn">تمام، شكرًا</button>
+      <a class="success-wa-main" id="successWaLink" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><use href="#icon-wa"/></svg>
+        <span>افتح واتساب وأرسل الطلب</span>
+      </a>
+      <p class="success-timer" id="successTimer"></p>
+      <button type="button" class="success-close-text" id="successCloseBtn">إغلاق بدون إرسال</button>
     </div>
   </div>
 </div>

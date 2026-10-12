@@ -61,7 +61,7 @@ position: sticky; top: env(safe-area-inset-top); z-index: 50;
 }
 .topbar-inner {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+grid-template-columns: minmax(80px, 1fr) auto minmax(80px, 1fr);
   align-items: center;
   gap: 12px;
   padding: 12px 0;
@@ -71,14 +71,23 @@ position: sticky; top: env(safe-area-inset-top); z-index: 50;
 .header-left { display: flex; gap: 4px; align-items: center; justify-self: end; }
 
 .brand {
-  display: flex; align-items: center; gap: 10px;
-  justify-self: center; transition: opacity 0.2s; max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: center;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+  max-width: 100%;
 }
 .brand:hover { opacity: 0.7; }
 .brand img {
-  height: 60px; max-width: 200px; width: auto;
-  object-fit: contain; display: block;
-  transition: height .3s ease;
+  height: 60px;
+  width: auto;
+  max-width: 280px;
+  object-fit: contain;
+  display: block;
+  transition: height .3s ease, max-width .3s ease;
+}
 }
 .brand img:not([src]), .brand img[src=""] { display: none; }
 .brand span { font-weight: 700; font-size: 22px; color: #000; white-space: nowrap; }
@@ -225,8 +234,8 @@ position: sticky; top: env(safe-area-inset-top); z-index: 50;
 .hero-bg {
   position: relative;
   overflow: hidden;
-  background: #1a1a1a;
-  min-height: 480px;
+  background: #f5ede3;
+  height: clamp(400px, 96vw, 480px);
 }
 
 .hero-bg .pf {
@@ -236,99 +245,92 @@ position: sticky; top: env(safe-area-inset-top); z-index: 50;
   height: 100%;
   z-index: 0;
 }
-
 .hero-bg .pf .frame { width: 100%; height: 100%; display: block; }
 .hero-bg .pf .frame img {
-  width: 100%; height: 100%; object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 28% center; /* يبقي الطفل ظاهرًا ويترك الجهة اليمنى للنص */
   display: block;
 }
 .hero-bg .pf .frame.ph { display: none; }
+
+/* تدرّج خفيف جدًا من جهة النص فقط لوضوح القراءة (بدون تغميق الصورة) */
 .hero-bg .pf::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(0,0,0,0.15) 0%,
-    rgba(0,0,0,0.40) 45%,
-    rgba(0,0,0,0.70) 100%
-  );
+  background: linear-gradient(270deg, rgba(250,246,240,.62) 0%, rgba(250,246,240,.28) 45%, rgba(250,246,240,0) 70%);
   z-index: 1;
   pointer-events: none;
 }
 
+.hero-bg .hero-wrap { position: relative; z-index: 2; height: 100%; }
 .hero-bg .hero {
-  position: relative;
-  z-index: 2;
-  direction: rtl;
+  height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  min-height: 480px;
-  padding: 80px 0;
+  justify-content: flex-start; /* RTL: يعني اليمين */
+  padding: 24px 0;
 }
-
 .hero-bg .hero-text {
   direction: rtl;
-  width: 100%;
-  max-width: 540px;
-  text-align: right;
+  width: 56%;
+  max-width: 460px;
+  text-align: center;
 }
 
 .hero h1 {
-  font-weight: 300;
-  color: #fff;
-  margin-bottom: 20px;
-  font-size: clamp(30px, 5vw, 60px);
-  line-height: 1.15;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.5);
+  font-weight: 500;
+  color: #5b4a3a;
+  margin-bottom: 12px;
+  font-size: clamp(25px, 7.2vw, 34px);
+  line-height: 1.35;
+  text-wrap: balance;
 }
-
 .hero p {
-  margin: 0 0 30px;
-  font-size: 15px;
-  color: rgba(255,255,255,0.92);
-  max-width: 420px;
+  margin: 0 auto 10px;
+  font-size: clamp(13px, 3.6vw, 15px);
+  color: #6b5a4a;
+  max-width: 340px;
   font-weight: 400;
   line-height: 1.7;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+  text-wrap: balance;
 }
+.hero-heart { color: #8a6a3a; margin: 0 auto 14px; display: block; }
 
-.btn-row {
-  justify-content: flex-start;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+.btn-row { justify-content: center; display: flex; gap: 12px; flex-wrap: wrap; }
 
 .cta-main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
-  color: #000;
-  border: 1px solid #fff;
+  background: #a67c52;
+  color: #fff;
+  border: 1.5px solid #a67c52;
   gap: 10px;
-  padding: 16px 44px;
-  border-radius: 0;
+  padding: 12px 30px;
+  border-radius: 100px;
   font-size: 15px;
   font-weight: 600;
   transition: all 0.25s;
-  min-height: 52px;
+  min-height: 48px;
+  text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
-.cta-main:hover {
-  background: transparent;
-  color: #fff;
-}
+.cta-main:hover { background: #8a6a3a; border-color: #8a6a3a; }
 .cta-main:active { transform: scale(0.98); }
+.cta-alt, #waHero { display: none !important; }
 
 @media (min-width: 900px) {
-  .hero-bg { min-height: 600px; }
-  .hero-bg .hero { min-height: 600px; padding: 100px 0; }
-  .hero-bg .hero-text { max-width: 620px; }
+  .hero-bg { height: clamp(460px, 40vw, 580px); }
+  .hero-bg .pf .frame img { object-position: 30% center; }
+  .hero-bg .hero-text { width: 46%; max-width: 520px; }
+  .hero h1 { font-size: clamp(36px, 3.6vw, 52px); margin-bottom: 16px; }
+  .hero p { font-size: 17px; max-width: 400px; }
+  .hero-heart { margin-bottom: 22px; }
+  .cta-main { padding: 14px 40px; font-size: 16px; }
 }
-/* ===== شريط الثقة ===== */
 .trust { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 48px 0 0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
 .trust div {
   background: #fff; border: none; border-inline-end: 1px solid #f0f0f0; border-radius: 0;
@@ -388,10 +390,10 @@ position: sticky; top: env(safe-area-inset-top); z-index: 50;
   color: #fff; font-size: 14px; font-weight: 500; min-height: 46px;
 }
 .dcount { margin-top: 8px; font-size: 13px; color: #666; }
-.success-wa {
-  display: block; margin: 0 0 14px; font-size: 13px; color: #555;
-  text-decoration: underline; text-underline-offset: 3px;
-}
+
+
+
+
 .shop-empty svg { color: #000; fill: none; stroke: currentColor; margin-bottom: 6px; }
 .shop-empty h3 { font-weight: 500; font-size: 18px; color: #000; }
 .shop-empty p { font-size: 13px; color: #666; max-width: 340px; }
@@ -828,30 +830,38 @@ footer { margin-top: 72px; border-top: 1px solid #f0f0f0; background: #fff; padd
   font-size: 14px;
 }
 
-/* ===== نافذة النجاح ===== */
+/* ===== نافذة الخطوة الأخيرة ===== */
 #successModal .modal { max-width: 440px; }
-.success-modal .modal-body { padding: 28px 24px 24px; text-align: center; }
+.success-modal .modal-body { padding: 32px 24px 24px; text-align: center; }
 
-.success-check {
-  width: 72px;
-  height: 72px;
+/* أيقونة واتساب نابضة */
+.success-icon-wa {
+  width: 88px;
+  height: 88px;
   margin: 0 auto 20px;
   display: grid;
   place-items: center;
   background: #25D366;
+  color: #fff;
   border-radius: 50%;
-  animation: successPop 0.5s cubic-bezier(0.18, 1.25, 0.4, 1.1);
+  animation: waPulse 1.8s ease-in-out infinite;
 }
-@keyframes successPop {
-  0% { transform: scale(0); opacity: 0; }
-  60% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); }
+@keyframes waPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55); }
+  50% { transform: scale(1.04); box-shadow: 0 0 0 18px rgba(37, 211, 102, 0); }
 }
 
 .success-title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   color: #000;
+  margin: 0 0 8px;
+}
+
+.success-sub {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.65;
   margin: 0 0 20px;
 }
 
@@ -863,13 +873,9 @@ footer { margin-top: 72px; border-top: 1px solid #f0f0f0; background: #fff; padd
   padding: 14px 18px;
   background: #fafafa;
   border: 1px solid #f0f0f0;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
-.success-ref-label {
-  font-size: 12.5px;
-  color: #666;
-  font-weight: 500;
-}
+.success-ref-label { font-size: 12.5px; color: #666; font-weight: 500; }
 .success-ref-value {
   font-family: ui-monospace, Menlo, monospace;
   font-size: 14px;
@@ -878,71 +884,67 @@ footer { margin-top: 72px; border-top: 1px solid #f0f0f0; background: #fff; padd
   letter-spacing: 0.3px;
 }
 
-.success-note {
-  font-size: 13.5px;
-  color: #666;
-  line-height: 1.7;
-  margin: 0 0 22px;
+.success-alert {
+  padding: 12px 14px;
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-align: right;
 }
 
-.success-steps {
+/* زر واتساب الرئيسي — كبير وأخضر */
+.success-wa-main {
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 22px;
-}
-.success-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  position: relative;
-}
-.success-step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 14px;
-  inset-inline-start: calc(50% + 16px);
-  width: calc(100% - 32px);
-  height: 1px;
-  background: #e5e5e5;
-}
-.success-step-num {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  background: #000;
-  color: #fff;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-.success-step-text {
-  font-size: 12.5px;
-  color: #555;
-  text-align: center;
-  line-height: 1.3;
-}
-
-.success-btn {
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  padding: 16px;
-  background: #000;
+  padding: 18px 20px;
+  background: #25D366;
   color: #fff;
   border: none;
   font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
-  min-height: 52px;
+  min-height: 58px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+  transition: background .15s, transform .1s;
   -webkit-tap-highlight-color: transparent;
 }
-.success-btn:active { transform: scale(0.98); }
+.success-wa-main:hover { background: #1ea952; }
+.success-wa-main:active { transform: scale(0.98); }
+.success-wa-main svg { flex-shrink: 0; }
+
+/* مؤقّت التنقل التلقائي */
+.success-timer {
+  font-size: 12.5px;
+  color: #999;
+  margin: 0 0 8px;
+  min-height: 18px;
+  line-height: 1.5;
+}
+
+/* زر الإغلاق — نص بسيط */
+.success-close-text {
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+}
+.success-close-text:hover { color: #555; }
 
 .chk-empty-icon { font-size: 48px; margin-bottom: 12px; }
 
@@ -998,9 +1000,6 @@ footer { margin-top: 72px; border-top: 1px solid #f0f0f0; background: #fff; padd
    =================================================================== */
 
 @media (max-width: 900px) {
-  .hero-bg .hero { min-height: 360px; padding: 48px 0; }
-  .hero-bg .hero-text { width: 100%; }
-  .hero-bg .pf::after { background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.62) 100%); }
   .trust { grid-template-columns: repeat(2, 1fr); }
   .trust div { padding: 18px 10px; font-size: 13px; }
   .trust div:nth-child(2) { border-inline-end: none; }
@@ -1045,9 +1044,7 @@ footer { margin-top: 72px; border-top: 1px solid #f0f0f0; background: #fff; padd
   .modal { padding: 0; border-radius: 0; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
   .modal-head { padding: 16px; }
   .modal-body { padding: 16px; }
-  .hero h1 { font-size: 26px; }
-  .hero p { font-size: 13px; }
-  .cta-main { padding: 14px 32px; font-size: 13px; }
+  .cta-main { padding: 11px 24px; font-size: 14px; }
   .swatch { width: 34px; height: 34px; }
   .size-chip { padding: 7px 11px; font-size: 12px; min-height: 38px; min-width: 44px; }
   .gender-btn { padding: 10px 18px; font-size: 13px; }

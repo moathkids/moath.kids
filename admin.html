@@ -32,7 +32,7 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-brand">
-      <img src="logo.png" alt="معاذ كيدز" onerror="this.style.display='none'">
+      <img src="logo.png" alt="معاذ كيدز">
       <h1>لوحة التحكم</h1>
       <p>معاذ كيدز - Moath Kids</p>
     </div>
@@ -59,7 +59,7 @@
   <header class="admin-header">
     <div class="admin-header-inner">
       <div class="admin-brand">
-        <img src="logo.png" alt="" onerror="this.style.display='none'">
+        <img src="logo.png" alt="">
         <div>
           <strong>لوحة التحكم</strong>
           <span>معاذ كيدز</span>
@@ -74,7 +74,8 @@
 
   <nav class="admin-tabs" id="adminTabs" aria-label="التنقل الرئيسي">
     <button type="button" class="tab active" data-tab="home"><span class="tab-ic">🏠</span><span class="tab-tx">الرئيسية</span></button>
-<button type="button" class="tab" data-tab="orders"><span class="tab-ic">📥</span><span class="tab-tx">الطلبات</span><span class="tab-badge" id="ordersBadge" hidden></span><span class="tab-badge test" id="testOrdersBadge" hidden></span></button>
+    <button type="button" class="tab" data-tab="finance"><span class="tab-ic">💰</span><span class="tab-tx">المالية</span></button>
+    <button type="button" class="tab" data-tab="orders"><span class="tab-ic">📥</span><span class="tab-tx">الطلبات</span><span class="tab-badge" id="ordersBadge" hidden></span><span class="tab-badge test" id="testOrdersBadge" hidden></span></button>
     <button type="button" class="tab" data-tab="exchanges"><span class="tab-ic">🔄</span><span class="tab-tx">الاستبدال</span></button>
     <button type="button" class="tab" data-tab="returns"><span class="tab-ic">↩️</span><span class="tab-tx">الإرجاع</span></button>
     <button type="button" class="tab" data-tab="products"><span class="tab-ic">🛍️</span><span class="tab-tx">المنتجات</span></button>
@@ -189,6 +190,73 @@
         <button type="button" class="btn-primary" onclick="Admin.openProductForm()">+ إضافة منتج</button>
         <button type="button" class="btn-secondary" onclick="Admin.goTab('orders')">📥 الطلبات</button>
         <button type="button" class="btn-secondary" onclick="Admin.goTab('meta')">📊 Meta Pixel</button>
+      </div>
+    </section>
+
+<!-- 💰 المالية -->
+    <section class="tab-panel" id="tab-finance">
+      <div class="panel-head">
+        <div>
+          <h2>💰 المالية</h2>
+          <p class="muted">إدارة رأس المال والمصاريف والأرباح</p>
+        </div>
+      </div>
+
+      <h3 class="section-label">📊 نظرة عامة</h3>
+
+      <div class="stats-grid" id="financeStatsGrid">
+        <div class="stat-card">
+          <div class="stat-icon">💵</div>
+          <div class="stat-body">
+            <strong id="finCapital">—</strong>
+            <span>رأس المال المستثمر</span>
+          </div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-icon">📈</div>
+          <div class="stat-body">
+            <strong id="finProfit">—</strong>
+            <span>الأرباح المتراكمة</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💸</div>
+          <div class="stat-body">
+            <strong id="finExpenses">—</strong>
+            <span>إجمالي المصاريف</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📤</div>
+          <div class="stat-body">
+            <strong id="finWithdrawals">—</strong>
+            <span>السحوبات</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="finance-balance">
+        <span>✨ صافي رصيدك</span>
+        <strong id="finBalance">—</strong>
+      </div>
+
+      <h3 class="section-label">💸 المصاريف</h3>
+
+      <button type="button" class="btn-primary" onclick="Admin.openExpenseForm()" style="width:100%;margin-bottom:14px">+ إضافة مصروف</button>
+
+      <div id="expensesList" class="finance-list">
+        <p class="muted">جاري التحميل...</p>
+      </div>
+
+      <h3 class="section-label">📥 رأس المال</h3>
+
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <button type="button" class="btn-secondary" onclick="Admin.openCapitalForm('injection')" style="flex:1">+ ضخ سيولة</button>
+        <button type="button" class="btn-secondary" onclick="Admin.openCapitalForm('withdrawal')" style="flex:1">− سحب</button>
+      </div>
+
+      <div id="capitalList" class="finance-list">
+        <p class="muted">جاري التحميل...</p>
       </div>
     </section>
 
@@ -402,6 +470,19 @@
       <button type="button" class="modal-close" onclick="Admin.closeOpDetail()">✕</button>
     </div>
     <div class="modal-body" id="opDetailBody"></div>
+  </div>
+</div>
+
+<!-- نافذة المالية (مصاريف + رأس مال) -->
+<div class="modal-bg" id="financeModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="financeModalTitle">إضافة</h3>
+      <button type="button" class="modal-close" onclick="Admin.closeFinanceModal()">✕</button>
+    </div>
+    <div class="modal-body" id="financeModalBody">
+      <p class="muted">جاري التحميل...</p>
+    </div>
   </div>
 </div>
 
