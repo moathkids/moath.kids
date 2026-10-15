@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>الصفحة غير موجودة | معاذ كيدز</title>
+<meta name="description" content="الصفحة التي تبحث عنها غير موجودة. عُد إلى متجر معاذ كيدز.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#faf4ec">
+
+<link rel="icon" href="logo.png" type="image/png">
+<link rel="preload" href="fonts/tajawal-arabic-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/tajawal-arabic-700.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+@font-face { font-family: 'Tajawal'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('fonts/tajawal-arabic-400.woff2') format('woff2');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+@font-face { font-family: 'Tajawal'; font-style: normal; font-weight: 500; font-display: swap;
+  src: url('fonts/tajawal-arabic-500.woff2') format('woff2');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+@font-face { font-family: 'Tajawal'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('fonts/tajawal-arabic-700.woff2') format('woff2');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+@font-face { font-family: 'Tajawal'; font-style: normal; font-weight: 800; font-display: swap;
+  src: url('fonts/tajawal-arabic-800.woff2') format('woff2');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #faf4ec;
+  color: #5b4a3a;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+.box {
+  width: 100%;
+  max-width: 420px;
+  animation: fadeIn .5s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.logo {
+  width: min(64vw, 220px);
+  height: auto;
+  margin: 0 auto 24px;
+  display: block;
+  mix-blend-mode: multiply;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #a67c52;
+  background: #fff;
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+  border: 1px solid #e6d6c5;
+}
+
+h1 {
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 700;
+  color: #5b4a3a;
+  margin-bottom: 12px;
+  line-height: 1.35;
+}
+
+p {
+  font-size: clamp(14px, 3.8vw, 15.5px);
+  color: #7a6650;
+  margin-bottom: 28px;
+  max-width: 340px;
+  margin-inline: auto;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 14px 24px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  transition: transform .12s, background .15s, border-color .15s;
+  -webkit-tap-highlight-color: transparent;
+  border: 1.5px solid transparent;
+}
+
+.btn:active { transform: scale(.97); }
+
+.btn-primary {
+  background: #a67c52;
+  color: #fff;
+  border-color: #a67c52;
+}
+.btn-primary:hover { background: #8a6a3a; border-color: #8a6a3a; }
+
+.btn-wa {
+  background: #25D366;
+  color: #fff;
+  border-color: #25D366;
+}
+.btn-wa:hover { background: #1ea952; border-color: #1ea952; }
+
+.btn svg { flex: none; }
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 20px;
+  border-top: 1px solid #e6d6c5;
+}
+
+.links a {
+  font-size: 13px;
+  color: #8a6a3a;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 100px;
+  transition: background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.links a:hover { background: #fff; color: #5b4a3a; }
+
+.footer {
+  margin-top: 24px;
+  font-size: 11.5px;
+  color: #a89680;
+  letter-spacing: 0.3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box { animation: none; }
+  .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+
+  <div class="box">
+    <img class="logo" src="logo-loader.webp" alt="معاذ كيدز" onerror="this.src='logo.png'">
+
+    <div class="badge">404</div>
+
+    <h1>عذرًا، الصفحة غير موجودة</h1>
+
+    <p>يبدو أن الرابط الذي تحاول الوصول إليه غير صحيح، أو تم حذف الصفحة. لكن لا تقلق — متجرنا ما زال في انتظارك!</p>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="/">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        العودة إلى الرئيسية
+      </a>
+
+      <a class="btn btn-wa" href="https://wa.me/972598904686" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        </svg>
+        تواصل عبر واتساب
+      </a>
+    </div>
+
+    <nav class="links">
+      <a href="/#shop">المنتجات</a>
+      <a href="/#faq">الأسئلة الشائعة</a>
+      <a href="/#contact">تواصل معنا</a>
+    </nav>
+
+    <div class="footer">معاذ كيدز · Moath Kids</div>
+  </div>
+
+</body>
+</html>
