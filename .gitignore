@@ -1,0 +1,65 @@
+# ═══════════════════════════════════════════════════════════
+# .gitignore — معاذ كيدز | Moath Kids
+# ملفات لا يجب رفعها إلى المستودع
+# ═══════════════════════════════════════════════════════════
+
+# ─── ملفات نظام التشغيل ───
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ─── ملفات المحررات ───
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ─── الملفات المؤقتة ───
+*.tmp
+*.temp
+*.log
+*.cache
+
+# ─── الحزم والمكتبات ───
+node_modules/
+package-lock.json
+yarn.lock
+.pnpm-store/
+
+# ─── متغيرات البيئة والأسرار ───
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets.json
+
+# ─── مجلدات البناء ───
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# ─── Supabase ───
+supabase/.branches/
+supabase/.temp/
+
+# ─── النسخ الاحتياطية ───
+*.zip
+*.tar.gz
+backup/
+backups/
+
+# ─── ملفات شخصية ───
+notes.txt
+todo.md
+scratch/
